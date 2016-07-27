@@ -1,51 +1,36 @@
-import os
 from falafel.core.plugins import mapper
-from falafel.core import MapperOutput, computed
+from falafel.core import MapperOutput
+from falafel.mappers import get_active_lines
 
 
 class HTTPDConf(MapperOutput):
+    pass
 
-    def __init__(self, context):
-        self.data = context.content
-        self.path = context.path
-        self.computed = {}
-        self.compute()
-
-    @computed
-    def file_path(self):
-        """
-        Returns the file path of this httpd.conf
-        """
-        return self.path
-
-    @computed
-    def file_name(self):
-        """
-        Returns the file name of this httpd.conf
-        """
-        return os.path.basename(self.path)
-
-    def get_filter_strings(self, filter_string):
-        """
-        Get the filter_string directive options (should not be empty) string
-        (remove extra spaces and convert to lowercase) and wrap them into a list
-        """
-        result = []
-        for line in self.data:
-            if not line or line.lstrip().startswith('#'):
-                continue
-            if filter_string in line:
-                options = " ".join(line.split(filter_string, 1)[1].split()).lower()
-                if options:
-                    result.append(options)
-        self._add_to_computed(filter_string, result)
-        return result
+# Expandable list of custom delimiters
+# Default is space
+DELIMS = {
+    "SSLCipherSuite": ":",
+    "NSSProtocol": ","
+}
 
 
-# adding filters for mappers, need to adjust it when using
-# maybe could remove it when unmaintainable
-@mapper('httpd.conf', ["SSL", "NSSProtocol", "MaxClients"])
-@mapper('httpd.conf.d', ["SSL", "NSSProtocol", "MaxClients"])
+def parse(content):
+    """
+    Get the filter_string directive options (should not be empty) string
+    (remove extra spaces and convert to lowercase) and wrap them into a list
+    """
+    result = {}
+    for line in get_active_lines(content):
+        try:
+            k, rest = line.split(None, 1)
+            result[k] = [s.strip().lower() for s in rest.split(DELIMS.get(k))]
+        except Exception:
+            pass
+    return result
+
+
+@mapper('httpd.conf')
+@mapper('httpd.conf.d')
 def parse_httpd_conf(context):
     """
     Get these three basic filter string according to exsited rules.
@@ -53,4 +38,6 @@ def parse_httpd_conf(context):
 
     return a HTTPDConf object
     """
-    return HTTPDConf(context)
+    d = parse(context.content)
+    if d:  # i.e. if we got any lines parsed successfully
+        return HTTPDConf(d, path=context.path)
