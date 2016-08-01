@@ -20,10 +20,24 @@ def parse(content):
     (remove extra spaces and convert to lowercase) and wrap them into a list
     """
     result = {}
+    sect = None
     for line in get_active_lines(content):
         try:
-            k, rest = line.split(None, 1)
-            result[k] = [s.strip().lower() for s in rest.split(DELIMS.get(k))]
+            # new section start
+            if line.startswith('<'):
+                sect = line.strip('<>')
+            # section end
+            elif line.startswith('</'):
+                sect = None
+            else:
+                k, rest = line.split(None, 1)
+                if sect:
+                    if sect not in result:
+                        result[sect] = {k: rest}
+                    else:
+                        result[sect][k] = rest
+                else:
+                    result[k] = [s.strip().lower() for s in rest.split(DELIMS.get(k))]
         except Exception:
             pass
     return result
