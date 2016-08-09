@@ -8,9 +8,25 @@ SSLProtocol -ALL +SSLv3
 NSSProtocol SSLV3 TLSV1.0
 #NSSProtocol ALL
 
-# MaxClients: maximum number of server processes allowed to start
-   MaxClients          256
+# prefork MPM
+ <IfModule prefork.c>
+StartServers       8
+MinSpareServers    5
+MaxSpareServers   20
+ServerLimit      256
+MaxClients       256
+MaxRequestsPerChild  200
+ </IfModule>
 
+# worker MPM
+<IfModule worker.c>
+StartServers         4
+MaxClients         300
+MinSpareThreads     25
+MaxSpareThreads     75
+ThreadsPerChild     25
+MaxRequestsPerChild  0
+</IfModule>
 """.strip()
 
 HTTPD_CONF_PATH = "etc/httpd/conf/httpd.conf"
@@ -27,6 +43,11 @@ SSLCipherSuite ALL:!ADH:!EXPORT:!SSLv2:RC4+RSA:+HIGH:+MEDIUM:+LOW
    MaxClients
 """.strip()
 
+httpd_conf.parse_httpd_conf.filters.extend([
+    'SSLProtocol', 'NSSProtocol', 'RequestHeader', 'FcgidPassHeader'
+    '<IfModule worker.c>', '<IfModule prefork.c>', '</IfModule>', 'MaxClients'
+])
+
 
 def test_get_filter_string_1():
     context = context_wrap(HTTPD_CONF_1, path=HTTPD_CONF_PATH)
@@ -35,7 +56,8 @@ def test_get_filter_string_1():
     assert result["SSLProtocol"] == ["-all", "+sslv3"]
     assert "SSLCipherSuite" not in result
     assert "sslv3 tlsv1.0" in result["NSSProtocol"]
-    assert result["MaxClients"] == ["256"]
+    assert result["MPM_prefork"]["MaxClients"] == "256"
+    assert result.get("MPM_worker")["MaxClients"] == "300"
     assert result.file_path == HTTPD_CONF_PATH
     assert result.file_name == "httpd.conf"
 
