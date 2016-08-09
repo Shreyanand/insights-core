@@ -43,6 +43,11 @@ SSLCipherSuite ALL:!ADH:!EXPORT:!SSLv2:RC4+RSA:+HIGH:+MEDIUM:+LOW
    MaxClients
 """.strip()
 
+httpd_conf.parse_httpd_conf.filters.extend([
+    'SSLProtocol', 'NSSProtocol', 'RequestHeader', 'FcgidPassHeader'
+    '<IfModule worker.c>', '<IfModule prefork.c>', '</IfModule>', 'MaxClients'
+])
+
 
 def test_get_filter_string_1():
     context = context_wrap(HTTPD_CONF_1, path=HTTPD_CONF_PATH)
@@ -51,8 +56,8 @@ def test_get_filter_string_1():
     assert result["SSLProtocol"] == ["-all", "+sslv3"]
     assert "SSLCipherSuite" not in result
     assert "sslv3 tlsv1.0" in result["NSSProtocol"]
-    assert result["IfModule prefork.c"]["MaxClients"] == "256"
-    assert result["IfModule worker.c"]["MaxClients"] == "300"
+    assert result["MPM_prefork"]["MaxClients"] == "256"
+    assert result.get("MPM_worker")["MaxClients"] == "300"
     assert result.file_path == HTTPD_CONF_PATH
     assert result.file_name == "httpd.conf"
 

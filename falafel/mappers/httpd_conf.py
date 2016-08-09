@@ -18,16 +18,21 @@ def parse(content):
     """
     Get the filter_string directive options (should not be empty) string
     (remove extra spaces and convert to lowercase) and wrap them into a list
+    Add the parsing of "<IfModule prefork.c>" and "<IfModule worker.c>"
+    sections
     """
     result = {}
     sect = None
     for line in get_active_lines(content):
         try:
-            # new section start
-            if line.startswith('<'):
-                sect = line.strip('<>')
+            # new IfModule section start
+            if line.startswith('<IfModule'):
+                if 'prefork.c' in line:
+                    sect = 'MPM_prefork'
+                elif 'worker.c' in line:
+                    sect = 'MPM_worker'
             # section end
-            elif line.startswith('</'):
+            elif line.startswith('</IfModule'):
                 sect = None
             else:
                 k, rest = line.split(None, 1)
@@ -47,10 +52,10 @@ def parse(content):
 @mapper('httpd.conf.d')
 def parse_httpd_conf(context):
     """
-    Get these three basic filter string according to exsited rules.
+    Get these three basic filter string according to existed rules.
     Can add more filter conditions if needed.
 
-    return a HTTPDConf object
+    Return a HTTPDConf object
     """
     d = parse(context.content)
     if d:  # i.e. if we got any lines parsed successfully
