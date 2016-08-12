@@ -24,32 +24,31 @@ FS_TAB_DATA = ['#',
 
 def test_fstab():
     context = Context(content=FS_TAB_DATA)
-    results = fstab.filesystem_mounts(context)
+    results = fstab.FSTab.parse_context(context)
     assert results is not None
     assert len(results) == 9
     sdb1 = None
     nfs_host = None
     for result in results:
-        assert len(result) == 6
-        if result['fs_spec'] == "/dev/sdb1":
+        if result.fs_spec == "/dev/sdb1":
             sdb1 = result
-        elif result['fs_spec'].startswith("nfs_hostname.redhat.com:"):
+        elif result.fs_spec.startswith("nfs_hostname.redhat.com:"):
             nfs_host = result
     assert sdb1 is not None
-    assert sdb1['fs_file'] == "/hdfs/data1"
-    assert sdb1['fs_vfstype'] == ["xfs"]
-    assert sdb1['fs_mntops']['rw']
-    assert sdb1['fs_mntops']['relatime']
-    assert 'noquota' in sdb1['fs_mntops']
-    assert sdb1['fs_freq'] == 0
-    assert sdb1['fs_passno'] == 0
+    assert sdb1.fs_file == "/hdfs/data1"
+    assert sdb1.fs_vfstype == "xfs"
+    assert sdb1.fs_mntops.rw
+    assert sdb1.fs_mntops.relatime
+    assert 'noquota' in sdb1.fs_mntops.data
+    assert sdb1.fs_freq == 0
+    assert sdb1.fs_passno == 0
     assert nfs_host is not None
-    assert nfs_host['fs_spec'] == "nfs_hostname.redhat.com:/nfs_share/data"
-    assert nfs_host['fs_file'] == "/srv/rdu/cases/000"
-    assert nfs_host['fs_vfstype'] == ["nfs"]
-    assert nfs_host['fs_mntops']['ro']
-    assert nfs_host['fs_mntops']['hard']
-    assert 'bg' in nfs_host['fs_mntops']
-    assert nfs_host['fs_mntops']['rsize'] == "32768"
-    assert nfs_host['fs_freq'] == 0
-    assert nfs_host['fs_passno'] == 0
+    assert nfs_host.fs_spec == "nfs_hostname.redhat.com:/nfs_share/data"
+    assert nfs_host.fs_file == "/srv/rdu/cases/000"
+    assert nfs_host.fs_vfstype == "nfs"
+    assert nfs_host.fs_mntops.ro
+    assert nfs_host.fs_mntops.hard
+    assert 'bg' in nfs_host.fs_mntops.data
+    assert nfs_host.fs_mntops.rsize == "32768"
+    assert nfs_host.fs_freq == 0
+    assert nfs_host.fs_passno == 0
