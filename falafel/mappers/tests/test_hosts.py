@@ -7,6 +7,8 @@ HOSTS_EXAMPLE = """
 
 # Comment
 127.0.0.1 fte.foo.redhat.com ci.foo.redhat.com qa.foo.redhat.com stage.foo.redhat.com prod.foo.redhat.com # Comment at end of line
+
+10.0.0.1 nonlocal.foo.redhat.com nonlocal2.bar.redhat.com
 """.strip()
 
 EXPECTED = {
@@ -26,13 +28,17 @@ EXPECTED = {
         "localhost.localdomain",
         "localhost6",
         "localhost6.localdomain6"
+    ],
+    "10.0.0.1": [
+        "nonlocal.foo.redhat.com",
+        "nonlocal2.bar.redhat.com"
     ]
 }
 
 
 def test_hosts():
     d = hosts(context_wrap(HOSTS_EXAMPLE)).data
-    assert len(d) == 2
+    assert len(d) == 3
     for key in ["127.0.0.1", "::1"]:
         assert key in d
         assert d[key] == EXPECTED[key]
@@ -40,5 +46,11 @@ def test_hosts():
 
 def test_all_hosts():
     all_names = hosts(context_wrap(HOSTS_EXAMPLE)).all_names
-    expected = set(EXPECTED["127.0.0.1"]) | set(EXPECTED["::1"])
+    expected = set(EXPECTED["127.0.0.1"]) | set(EXPECTED["::1"]) | set(EXPECTED["10.0.0.1"])
     assert all_names == expected
+
+
+def test_nonlocal():
+    ob = hosts(context_wrap(HOSTS_EXAMPLE))
+    expected = {"10.0.0.1": EXPECTED["10.0.0.1"]}
+    assert ob.get_nonlocal() == expected
