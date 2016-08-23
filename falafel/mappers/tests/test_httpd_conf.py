@@ -1,4 +1,4 @@
-from falafel.mappers import httpd_conf
+from falafel.mappers.httpd_conf import HttpdConf
 from falafel.tests import context_wrap
 
 HTTPD_CONF_1 = """
@@ -43,7 +43,7 @@ SSLCipherSuite ALL:!ADH:!EXPORT:!SSLv2:RC4+RSA:+HIGH:+MEDIUM:+LOW
    MaxClients
 """.strip()
 
-httpd_conf.parse_httpd_conf.filters.extend([
+HttpdConf.filters.extend([
     'SSLProtocol', 'NSSProtocol', 'RequestHeader', 'FcgidPassHeader'
     '<IfModule worker.c>', '<IfModule prefork.c>', '</IfModule>', 'MaxClients'
 ])
@@ -51,35 +51,25 @@ httpd_conf.parse_httpd_conf.filters.extend([
 
 def test_get_filter_string_1():
     context = context_wrap(HTTPD_CONF_1, path=HTTPD_CONF_PATH)
-    result = httpd_conf.parse_httpd_conf(context)
+    result = HttpdConf.parse_context(context)
 
-    assert result["SSLProtocol"] == ["-all", "+sslv3"]
-    assert "SSLCipherSuite" not in result
-    assert "sslv3 tlsv1.0" in result["NSSProtocol"]
-    assert result["MPM_prefork"]["MaxClients"] == "256"
-    assert result.get("MPM_worker")["MaxClients"] == "300"
+    assert result.data["SSLProtocol"] == "-ALL +SSLv3"
+    assert "SSLCipherSuite" not in result.data
+    assert "SSLV3 TLSV1.0" in result.data["NSSProtocol"]
+    assert result.data["MPM_prefork"]["MaxClients"] == "256"
+    assert result.data.get("MPM_worker")["MaxClients"] == "300"
     assert result.file_path == HTTPD_CONF_PATH
     assert result.file_name == "httpd.conf"
 
 
 def test_get_filter_string_2():
     context = context_wrap(HTTPD_CONF_D_1, path=HTTPD_CONF_D_PATH)
-    result = httpd_conf.parse_httpd_conf(context)
+    result = HttpdConf.parse_context(context)
 
-    except_SSLC = [
-        "all",
-        "!adh",
-        "!export",
-        "!sslv2",
-        "rc4+rsa",
-        "+high",
-        "+medium",
-        "+low",
-    ]
-
-    assert result["SSLProtocol"] == ["-all", "+sslv3"]
-    assert result["SSLCipherSuite"] == except_SSLC
-    assert "NSSProtocol" not in result
-    assert "MaxClients" not in result
+    except_SSLC = 'ALL:!ADH:!EXPORT:!SSLv2:RC4+RSA:+HIGH:+MEDIUM:+LOW'
+    assert result.data["SSLProtocol"] == "-ALL +SSLv3"
+    assert result.data["SSLCipherSuite"] == except_SSLC
+    assert "NSSProtocol" not in result.data
+    assert "MaxClients" not in result.data
     assert result.file_path == HTTPD_CONF_D_PATH
     assert result.file_name == "default.conf"

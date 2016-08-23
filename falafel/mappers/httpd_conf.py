@@ -3,60 +3,40 @@ from falafel.core import MapperOutput
 from falafel.mappers import get_active_lines
 
 
-class HTTPDConf(MapperOutput):
-    pass
-
-# Expandable list of custom delimiters
-# Default is space
-DELIMS = {
-    "SSLCipherSuite": ":",
-    "NSSProtocol": ","
-}
-
-
-def parse(content):
-    """
-    Get the filter_string directive options (should not be empty) string
-    (remove extra spaces and convert to lowercase) and wrap them into a list
-    Add the parsing of "<IfModule prefork.c>" and "<IfModule worker.c>"
-    sections
-    """
-    result = {}
-    sect = None
-    for line in get_active_lines(content):
-        try:
-            # new IfModule section start
-            if line.startswith('<IfModule'):
-                if 'prefork.c' in line:
-                    sect = 'MPM_prefork'
-                elif 'worker.c' in line:
-                    sect = 'MPM_worker'
-            # section end
-            elif line.startswith('</IfModule'):
-                sect = None
-            else:
-                k, rest = line.split(None, 1)
-                if sect:
-                    if sect not in result:
-                        result[sect] = {k: rest}
-                    else:
-                        result[sect][k] = rest
-                else:
-                    result[k] = [s.strip().lower() for s in rest.split(DELIMS.get(k))]
-        except Exception:
-            pass
-    return result
-
-
 @mapper('httpd.conf')
 @mapper('httpd.conf.d')
-def parse_httpd_conf(context):
-    """
-    Get these three basic filter string according to existed rules.
-    Can add more filter conditions if needed.
+class HttpdConf(MapperOutput):
 
-    Return a HTTPDConf object
-    """
-    d = parse(context.content)
-    if d:  # i.e. if we got any lines parsed successfully
-        return HTTPDConf(d, path=context.path)
+    @staticmethod
+    def parse_content(content):
+        """
+            Get the filter_string directive options (should not be empty) string
+            (remove extra spaces and convert to lowercase) and wrap them into a list
+            Add the parsing of "<IfModule prefork.c>" and "<IfModule worker.c>"
+            sections
+        """
+        result = {}
+        sect = None
+        for line in get_active_lines(content):
+            try:
+                # new IfModule section start
+                if line.startswith('<IfModule'):
+                    if 'prefork.c' in line:
+                        sect = 'MPM_prefork'
+                    elif 'worker.c' in line:
+                        sect = 'MPM_worker'
+                # section end
+                elif line.startswith('</IfModule'):
+                    sect = None
+                else:
+                    k, rest = line.split(None, 1)
+                    if sect:
+                        if sect not in result:
+                            result[sect] = {k: rest}
+                        else:
+                            result[sect][k] = rest
+                    else:
+                        result[k] = rest
+            except Exception:
+                pass
+        return result
