@@ -1,5 +1,5 @@
 from falafel.tests import context_wrap
-from falafel.mappers.systemid import systemid
+from falafel.mappers.systemid import SystemID
 
 SYSTEMID = '''
 <?xml version="1.0"?>
@@ -16,10 +16,7 @@ SYSTEMID = '''
 </member>
 <member>
 <name>description</name>
-<value><string>Initial Registration Parameters:
-OS: redhat-release-workstation
-Release: 6Workstation
-CPU Arch: x86_64</string></value>
+<value><string>Initial Registration Parameters: OS: redhat-release-workstation Release: 6Workstation CPU Arch: x86_64</string></value>
 </member>
 <member>
 <name>checksum</name>
@@ -59,24 +56,22 @@ CPU Arch: x86_64</string></value>
 </struct></value>
 </param>
 </params>
-'''
+'''.strip()
 
 
-class TestSystemId():
-    def test_systemid(self):
-        info = systemid(context_wrap(SYSTEMID,
-                                     path='etc/sysconfig/rhn/systemid'))
+def test_systemid():
+    info = SystemID.parse_context(context_wrap(SYSTEMID,
+                                  path='etc/sysconfig/rhn/systemid'))
 
-        assert len(info.data) == 9
-        assert info.data["username"] == 'johnsow1'
-        assert info.data["operating_system"] == 'redhat-release-workstation'
-        assert info.data["description"] == 'Initial Registration Parameters: OS: redhat-release-workstation Release: 6Workstation CPU Arch: x86_64'
-        assert info.data["checksum"] == 'b493da72be7cfb7e54c1d58c6aa140c9'
-        assert info.data["profile_name"] == 'usorla7hr0107x'
-        assert info.data["system_id"] == 'ID-1000030112'
-        assert info.data["architecture"] == 'x86_64'
-        assert info.data["os_release"] == '6Workstation'
-        assert info.data["type"] == 'REAL'
+    assert info.get("username") == 'johnsow1'
+    assert info.get("operating_system") == 'redhat-release-workstation'
+    assert info.get("description") == 'Initial Registration Parameters: OS: redhat-release-workstation Release: 6Workstation CPU Arch: x86_64'
+    assert info.get("checksum") == 'b493da72be7cfb7e54c1d58c6aa140c9'
+    assert info.get("profile_name") == 'usorla7hr0107x'
+    assert info.get("system_id") == 'ID-1000030112'
+    assert info.get("architecture") == 'x86_64'
+    assert info.get("os_release") == '6Workstation'
+    assert info.get("type") == 'REAL'
 
-        assert info.file_name == 'systemid'
-        assert info.file_path == 'etc/sysconfig/rhn/systemid'
+    assert info.file_name == 'systemid'
+    assert info.file_path == 'etc/sysconfig/rhn/systemid'
