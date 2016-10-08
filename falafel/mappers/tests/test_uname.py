@@ -41,7 +41,7 @@ class TestUname(object):
         assert ['2.6.33-100.el6'] == kernel1.fixed_by('2.6.33-100.el6')
         assert ['2.6.32-600.el6'] == kernel1.fixed_by('2.6.32-220.1.el6', '2.6.32-600.el6')
 
-        uname_rt_1 = falafel.mappers.uname.Uname.parse_context(context_wrap(UNAME_RT_1))
+        uname_rt_1 = falafel.mappers.uname.Uname(context_wrap(UNAME_RT_1))
         assert uname_rt_1
         assert uname_rt_1.version == "2.6.24.7"
         assert uname_rt_1._sv_version is None
@@ -49,14 +49,14 @@ class TestUname(object):
         assert uname_rt_1.release == "101.el5rt"
         assert uname_rt_1.arch == "x86_64"
         assert uname_rt_1 == UNAME_RT_1
-        assert uname_rt_1 == falafel.mappers.uname.Uname(UNAME_RT_1)
+        assert uname_rt_1 == falafel.mappers.uname.Uname.from_uname_str(UNAME_RT_1)
         assert uname_rt_1 > UNAME_RT_1pre
         assert uname_rt_1 > UNAME_RT_1pre2
         assert uname_rt_1 < UNAME_RT_1post
         assert uname_rt_1 < UNAME_RT_1post2
         assert uname_rt_1.rhel_release == ['-1', '-1']
 
-        uname_rt_2 = falafel.mappers.uname.Uname.parse_context(context_wrap(UNAME_RT_2))
+        uname_rt_2 = falafel.mappers.uname.Uname(context_wrap(UNAME_RT_2))
         assert uname_rt_2
         assert uname_rt_2.version == "2.6.33.9"
         assert uname_rt_2._sv_version is None
@@ -64,14 +64,14 @@ class TestUname(object):
         assert uname_rt_2.release == "rt31.66.el6rt"
         assert uname_rt_2.arch == "x86_64"
         assert uname_rt_2 == UNAME_RT_2
-        assert uname_rt_2 == falafel.mappers.uname.Uname(UNAME_RT_2)
+        assert uname_rt_2 == falafel.mappers.uname.Uname.from_uname_str(UNAME_RT_2)
         assert uname_rt_2 > UNAME_RT_2pre
         assert uname_rt_2 > UNAME_RT_2pre2
         assert uname_rt_2 < UNAME_RT_2post
         assert uname_rt_2 < UNAME_RT_2post2
         assert uname_rt_2.rhel_release == ['-1', '-1']
 
-        uname_rt_3 = falafel.mappers.uname.Uname.parse_context(context_wrap(UNAME_RT_3))
+        uname_rt_3 = falafel.mappers.uname.Uname(context_wrap(UNAME_RT_3))
         assert uname_rt_3
         assert uname_rt_3.version == "3.10.0"
         assert uname_rt_3._sv_version == "3.10.0"
@@ -79,7 +79,7 @@ class TestUname(object):
         assert uname_rt_3.release == "327.rt56.204.el7"
         assert uname_rt_3.arch == "x86_64"
         assert uname_rt_3 == UNAME_RT_3
-        assert uname_rt_3 == falafel.mappers.uname.Uname(UNAME_RT_3)
+        assert uname_rt_3 == falafel.mappers.uname.Uname.from_uname_str(UNAME_RT_3)
         assert uname_rt_3 > UNAME_RT_3pre
         assert uname_rt_3 > UNAME_RT_3pre2
         assert uname_rt_3 < UNAME_RT_3post

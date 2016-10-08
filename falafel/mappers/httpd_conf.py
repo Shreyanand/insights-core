@@ -1,19 +1,18 @@
-from .. import MapperOutput, mapper, get_active_lines
+from .. import Mapper, mapper, get_active_lines, LegacyItemAccess
 
 
 @mapper('httpd.conf')
 @mapper('httpd.conf.d')
-class HttpdConf(MapperOutput):
+class HttpdConf(LegacyItemAccess, Mapper):
+    """
+    Get the filter_string directive options (should not be empty) string
+    (remove extra spaces and convert to lowercase) and wrap them into a list.
+    Add the parsing of "<IfModule prefork.c>" and "<IfModule worker.c>"
+    sections.
+    """
 
-    @staticmethod
-    def parse_content(content):
-        """
-            Get the filter_string directive options (should not be empty) string
-            (remove extra spaces and convert to lowercase) and wrap them into a list
-            Add the parsing of "<IfModule prefork.c>" and "<IfModule worker.c>"
-            sections
-        """
-        result = {}
+    def parse_content(self, content):
+        self.data = {}
         sect = None
         for line in get_active_lines(content):
             try:
@@ -29,12 +28,12 @@ class HttpdConf(MapperOutput):
                 else:
                     k, rest = line.split(None, 1)
                     if sect:
-                        if sect not in result:
-                            result[sect] = {k: rest}
+                        if sect not in self.data:
+                            self.data[sect] = {k: rest}
                         else:
-                            result[sect][k] = rest
+                            self.data[sect][k] = rest
                     else:
-                        result[k] = rest
+                        self.data[k] = rest
             except Exception:
                 pass
-        return result
+        return self.data

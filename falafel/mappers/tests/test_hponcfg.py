@@ -13,7 +13,7 @@ Host Information:
 
 def test_hponcfg():
 
-    conf = HponConf.parse_context(context_wrap(HPONCFG))
+    conf = HponConf(context_wrap(HPONCFG))
 
     assert "1.40" == conf.firmware_revision
     assert "iLO 4" == conf.device_type

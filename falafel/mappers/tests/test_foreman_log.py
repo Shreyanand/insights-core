@@ -126,7 +126,7 @@ SATELLITE_OUT = """
 
 
 def test_production_log():
-    fm_log = ProductionLog.parse_context(context_wrap(PRODUCTION_LOG))
+    fm_log = ProductionLog(context_wrap(PRODUCTION_LOG))
     assert 2 == len(fm_log.get("Rendered text template"))
     assert "Expired 48 Reports" in fm_log
     assert fm_log.get("Completed 200 OK in 93")[0] == \
@@ -134,6 +134,6 @@ def test_production_log():
 
 
 def test_satellite_log():
-    sat_log = SatelliteLog.parse_context(context_wrap(SATELLITE_OUT))
+    sat_log = SatelliteLog(context_wrap(SATELLITE_OUT))
     assert "subscribes to Class[Qpid]" in sat_log
     assert len(sat_log.get("notify: subscribes to Class[")) == 7

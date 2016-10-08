@@ -60,18 +60,17 @@ SYSTEMID = '''
 
 
 def test_systemid():
-    info = SystemID.parse_context(context_wrap(SYSTEMID,
-                                  path='etc/sysconfig/rhn/systemid'))
+    info = SystemID(context_wrap(SYSTEMID, path='etc/sysconfig/rhn/systemid'))
 
-    assert info.get("username") == 'johnsow1'
-    assert info.get("operating_system") == 'redhat-release-workstation'
-    assert info.get("description") == 'Initial Registration Parameters: OS: redhat-release-workstation Release: 6Workstation CPU Arch: x86_64'
-    assert info.get("checksum") == 'b493da72be7cfb7e54c1d58c6aa140c9'
-    assert info.get("profile_name") == 'usorla7hr0107x'
-    assert info.get("system_id") == 'ID-1000030112'
-    assert info.get("architecture") == 'x86_64'
-    assert info.get("os_release") == '6Workstation'
-    assert info.get("type") == 'REAL'
+    assert info.data.get("username") == 'johnsow1'
+    assert info.data.get("operating_system") == 'redhat-release-workstation'
+    assert info.data.get("description") == 'Initial Registration Parameters: OS: redhat-release-workstation Release: 6Workstation CPU Arch: x86_64'
+    assert info.data.get("checksum") == 'b493da72be7cfb7e54c1d58c6aa140c9'
+    assert info.data.get("profile_name") == 'usorla7hr0107x'
+    assert info.data.get("system_id") == 'ID-1000030112'
+    assert info.data.get("architecture") == 'x86_64'
+    assert info.data.get("os_release") == '6Workstation'
+    assert info.data.get("type") == 'REAL'
 
     assert info.file_name == 'systemid'
     assert info.file_path == 'etc/sysconfig/rhn/systemid'

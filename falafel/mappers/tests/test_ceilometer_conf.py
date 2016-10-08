@@ -562,7 +562,7 @@ time_to_live=-1
 
 
 def test_match():
-    result = CeilometerConf.parse_context(context_wrap(ceilometer_content))
+    result = CeilometerConf(context_wrap(ceilometer_content))
     assert result.data.get("DEFAULT").get("http_timeout") == "600"
     assert result.data.get("DEFAULT").get("log_dir") == "/var/log/ceilometer"
     assert result.data.get("api").get("host") == "192.0.2.10"
