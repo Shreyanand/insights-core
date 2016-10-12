@@ -3,7 +3,7 @@
 ================
 """
 from falafel.mappers import fstab
-from falafel.core.context import Context
+from falafel.tests import context_wrap
 
 FS_TAB_DATA = ['#',
                '# /etc/fstab',
@@ -23,8 +23,8 @@ FS_TAB_DATA = ['#',
 
 
 def test_fstab():
-    context = Context(content=FS_TAB_DATA)
-    results = fstab.FSTab.parse_context(context)
+    context = context_wrap(FS_TAB_DATA)
+    results = fstab.FSTab(context)
     assert results is not None
     assert len(results) == 9
     sdb1 = None
