@@ -1,4 +1,4 @@
-from falafel.mappers.hosts import hosts
+from falafel.mappers.hosts import Hosts
 from falafel.tests import context_wrap
 
 HOSTS_EXAMPLE = """
@@ -37,7 +37,7 @@ EXPECTED = {
 
 
 def test_hosts():
-    d = hosts(context_wrap(HOSTS_EXAMPLE)).data
+    d = Hosts(context_wrap(HOSTS_EXAMPLE)).data
     assert len(d) == 3
     for key in ["127.0.0.1", "::1"]:
         assert key in d
@@ -45,12 +45,12 @@ def test_hosts():
 
 
 def test_all_hosts():
-    all_names = hosts(context_wrap(HOSTS_EXAMPLE)).all_names
+    all_names = Hosts(context_wrap(HOSTS_EXAMPLE)).all_names
     expected = set(EXPECTED["127.0.0.1"]) | set(EXPECTED["::1"]) | set(EXPECTED["10.0.0.1"])
     assert all_names == expected
 
 
 def test_nonlocal():
-    ob = hosts(context_wrap(HOSTS_EXAMPLE))
+    ob = Hosts(context_wrap(HOSTS_EXAMPLE))
     expected = {"10.0.0.1": EXPECTED["10.0.0.1"]}
     assert ob.get_nonlocal() == expected

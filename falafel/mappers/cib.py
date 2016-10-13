@@ -1,25 +1,18 @@
-from falafel.core.plugins import mapper
-from falafel.core import MapperOutput, computed
+from .. import Mapper, mapper
 
 import xml.etree.ElementTree as ET
 
 
 @mapper("cib.xml")
-class CIB(MapperOutput):
+class CIB(Mapper):
     """
     Wraps a DOM of cib.xml
 
     self.dom is an instance of ElementTree.
     """
+    def parse_content(self, content):
+        self.dom = ET.fromstring("\n".join(content))
 
-    def __init__(self, data, path=None):
-        self.dom = ET.fromstring(data)
-        super(CIB, self).__init__(data, path)
-
-    @staticmethod
-    def parse_content(content):
-        return "\n".join(content)
-
-    @computed
+    @property
     def nodes(self):
         return [n.get("uname").lower() for n in self.dom.findall(".//nodes/node")]

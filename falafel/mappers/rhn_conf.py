@@ -1,13 +1,10 @@
-from falafel.core.plugins import mapper
-from falafel.mappers import get_active_lines
-from falafel.core import MapperOutput
+from .. import Mapper, mapper, get_active_lines, LegacyItemAccess
 
 
 @mapper('rhn.conf')
-class RHNConf(MapperOutput):
+class RHNConf(LegacyItemAccess, Mapper):
 
-    @staticmethod
-    def parse_content(content):
+    def parse_content(self, content):
         """
         Return a dict where
         - keys are the row header
@@ -47,4 +44,4 @@ class RHNConf(MapperOutput):
                 rhn[k] = [i.strip() for i in v.split(',')] if ',' in v else [v] if is_multi else v
             elif multi_lines_key:
                 rhn[multi_lines_key].extend([i.strip() for i in line.split(',')] if ',' in line else [line])
-        return rhn
+        self.data = rhn
