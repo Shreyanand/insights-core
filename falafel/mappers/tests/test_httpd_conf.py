@@ -51,7 +51,7 @@ HttpdConf.filters.extend([
 
 def test_get_filter_string_1():
     context = context_wrap(HTTPD_CONF_1, path=HTTPD_CONF_PATH)
-    result = HttpdConf.parse_context(context)
+    result = HttpdConf(context)
 
     assert result.data["SSLProtocol"] == "-ALL +SSLv3"
     assert "SSLCipherSuite" not in result.data
@@ -64,7 +64,7 @@ def test_get_filter_string_1():
 
 def test_get_filter_string_2():
     context = context_wrap(HTTPD_CONF_D_1, path=HTTPD_CONF_D_PATH)
-    result = HttpdConf.parse_context(context)
+    result = HttpdConf(context)
 
     except_SSLC = 'ALL:!ADH:!EXPORT:!SSLv2:RC4+RSA:+HIGH:+MEDIUM:+LOW'
     assert result.data["SSLProtocol"] == "-ALL +SSLv3"

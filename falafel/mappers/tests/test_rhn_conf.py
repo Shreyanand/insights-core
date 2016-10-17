@@ -22,7 +22,7 @@ web.default_taskmaster_tasks = RHN::Task::SessionCleanup, RHN::Task::ErrataQueue
 
 
 def test_rhn_conf():
-    r = RHNConf.parse_context(context_wrap(RHN_TEST))
+    r = RHNConf(context_wrap(RHN_TEST))
     assert r["a"] == "1"
     assert r["b"] == "2"
     assert r["c"] == "include an = sign"

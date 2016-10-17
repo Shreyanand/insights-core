@@ -1,5 +1,6 @@
 from falafel.tests import context_wrap
-from falafel.mappers.foreman_production_log import foreman_production_log
+from falafel.mappers.foreman_log import SatelliteLog, ProductionLog
+
 
 PRODUCTION_LOG = """
 2015-11-13 03:30:07 [I] Completed 200 OK in 1783ms (Views: 0.2ms | ActiveRecord: 172.9ms)
@@ -69,16 +70,70 @@ PRODUCTION_LOG = """
 2015-11-13 09:43:59 [I] Completed 200 OK in 80ms (Views: 2.9ms | ActiveRecord: 0.3ms)
 """.strip()
 
-foreman_production_log.filters.extend([
-    "Rendered text template",
-    "Expired 48 Reports",
-    "Completed 200 OK in 93ms",
-])
+
+SATELLITE_OUT = """
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Katello::Config::Pulp_client/Foreman_config_entry[pulp_client_cert]/require: requires Class[Certs::Pulp_client]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Katello::Config::Pulp_client/Foreman_config_entry[pulp_client_cert]/require: requires Exec[foreman-rake-db:seed]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Katello::Config::Pulp_client/Foreman_config_entry[pulp_client_key]/require: requires Class[Certs::Pulp_client]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Katello::Config::Pulp_client/Foreman_config_entry[pulp_client_key]/require: requires Exec[foreman-rake-db:seed]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Katello::Config/File[/etc/foreman/plugins/katello.yaml]/before: requires Class[Foreman::Database]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Katello::Config/File[/etc/foreman/plugins/katello.yaml]/before: requires Exec[foreman-rake-db:migrate]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Katello::Config/File[/etc/foreman/plugins/katello.yaml]/notify: subscribes to Service[foreman-tasks]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Katello::Config/File[/etc/foreman/plugins/katello.yaml]/notify: subscribes to Class[Foreman::Service]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Katello::Config/Foreman::Config::Passenger::Fragment[katello]/require: requires Class[Foreman::Config::Passenger]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Qpid/notify: subscribes to Class[Certs::Candlepin]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Qpid/Cert[kam1opapp999.connex.bclc.com-qpid-broker]/notify: subscribes to Pubkey[/etc/pki/katello/certs/kam1opapp999.connex.bclc.com-qpid-broker.crt]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Qpid/Pubkey[/etc/pki/katello/certs/kam1opapp999.connex.bclc.com-qpid-broker.crt]/notify: subscribes to Privkey[/etc/pki/katello/private/kam1opapp999.connex.bclc.com-qpid-broker.key]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Qpid/Privkey[/etc/pki/katello/private/kam1opapp999.connex.bclc.com-qpid-broker.key]/notify: subscribes to File[/etc/pki/katello/private/kam1opapp999.connex.bclc.com-qpid-broker.key]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Qpid/File[/etc/pki/katello/private/kam1opapp999.connex.bclc.com-qpid-broker.key]/notify: subscribes to File[/etc/pki/katello/nssdb]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Qpid/File[/etc/pki/katello/nssdb]/notify: subscribes to Exec[generate-nss-password]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Qpid/Exec[generate-nss-password]/before: requires File[/etc/pki/katello/nssdb/nss_db_password-file]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Qpid/File[/etc/pki/katello/nssdb/nss_db_password-file]/notify: subscribes to Exec[create-nss-db]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Qpid/Exec[create-nss-db]/before: requires Exec[delete ca]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Qpid/Exec[create-nss-db]/before: requires Exec[delete broker]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Qpid/Exec[create-nss-db]/before: requires Exec[delete amqp-client]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Qpid/Exec[create-nss-db]/notify: subscribes to Certs::Ssltools::Certutil[ca]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Qpid/Certs::Ssltools::Certutil[ca]/notify: subscribes to File[/etc/pki/katello/nssdb/cert8.db]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Qpid/Certs::Ssltools::Certutil[ca]/notify: subscribes to File[/etc/pki/katello/nssdb/key3.db]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Qpid/Certs::Ssltools::Certutil[ca]/notify: subscribes to File[/etc/pki/katello/nssdb/secmod.db]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Qpid/File[/etc/pki/katello/nssdb/cert8.db]/notify: subscribes to Certs::Ssltools::Certutil[broker]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Qpid/File[/etc/pki/katello/nssdb/key3.db]/notify: subscribes to Certs::Ssltools::Certutil[broker]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Qpid/File[/etc/pki/katello/nssdb/secmod.db]/notify: subscribes to Certs::Ssltools::Certutil[broker]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Qpid/Certs::Ssltools::Certutil[broker]/notify: subscribes to Exec[generate-pfx-for-nss-db]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Qpid/Exec[generate-pfx-for-nss-db]/notify: subscribes to Exec[add-private-key-to-nss-db]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Qpid/Exec[add-private-key-to-nss-db]/notify: subscribes to Service[qpidd]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Candlepin/notify: subscribes to Class[Candlepin]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Candlepin/Cert[java-client]/notify: subscribes to Pubkey[/etc/pki/katello/certs/java-client.crt]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Candlepin/File[/etc/pki/katello/keystore_password-file]/notify: subscribes to Exec[candlepin-generate-ssl-keystore]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Candlepin/Exec[candlepin-generate-ssl-keystore]/notify: subscribes to File[/usr/share/tomcat/conf/keystore]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Candlepin/File[/usr/share/tomcat/conf/keystore]/notify: subscribes to Service[tomcat]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Candlepin/Pubkey[/etc/pki/katello/certs/java-client.crt]/notify: subscribes to Privkey[/etc/pki/katello/private/java-client.key]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Candlepin/Privkey[/etc/pki/katello/private/java-client.key]/notify: subscribes to Certs::Ssltools::Certutil[amqp-client]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Candlepin/Certs::Ssltools::Certutil[amqp-client]/subscribe: subscribes to Exec[create-nss-db]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Candlepin/Certs::Ssltools::Certutil[amqp-client]/notify: subscribes to Service[qpidd]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Candlepin/Certs::Ssltools::Certutil[amqp-client]/notify: subscribes to File[/etc/candlepin/certs/amqp]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Candlepin/File[/etc/candlepin/certs/amqp]/notify: subscribes to Exec[create candlepin qpid exchange]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Candlepin/Exec[create candlepin qpid exchange]/require: requires Service[qpidd]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Candlepin/Exec[create candlepin qpid exchange]/notify: subscribes to Exec[import CA into Candlepin truststore]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Candlepin/Exec[import CA into Candlepin truststore]/notify: subscribes to Exec[import client certificate into Candlepin keystore]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Candlepin/Exec[import client certificate into Candlepin keystore]/notify: subscribes to File[/etc/candlepin/certs/amqp/candlepin.jks]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Candlepin/File[/etc/candlepin/certs/amqp/candlepin.jks]/notify: subscribes to Service[tomcat]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Candlepin/notify: subscribes to Class[Qpid]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Candlepin::Install/notify: subscribes to Class[Candlepin::Config]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Candlepin::Config/notify: subscribes to Class[Candlepin::Database]
+[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Candlepin::Database/notify: subscribes to Class[Candlepin::Service]
+""".strip()
 
 
-def test_foreman_production_log():
-    fm_log = foreman_production_log(context_wrap(PRODUCTION_LOG))
+def test_production_log():
+    fm_log = ProductionLog(context_wrap(PRODUCTION_LOG))
     assert 2 == len(fm_log.get("Rendered text template"))
     assert "Expired 48 Reports" in fm_log
     assert fm_log.get("Completed 200 OK in 93")[0] == \
         "2015-11-13 09:41:58 [I] Completed 200 OK in 93ms (Views: 2.9ms | ActiveRecord: 0.3ms)"
+
+
+def test_satellite_log():
+    sat_log = SatelliteLog(context_wrap(SATELLITE_OUT))
+    assert "subscribes to Class[Qpid]" in sat_log
+    assert len(sat_log.get("notify: subscribes to Class[")) == 7
