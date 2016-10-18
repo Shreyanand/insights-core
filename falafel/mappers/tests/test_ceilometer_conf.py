@@ -85,7 +85,7 @@ ceilometer_content = """
 # Timeout seconds for HTTP requests. Set it to None to disable
 # timeout. (integer value)
 #http_timeout = 600
- http_timeout = 600
+http_timeout = 600
 # DEPRECATED - Database connection string. (string value)
 #database_connection = <None>
 # Path to the rootwrap configuration file touse for running commands
@@ -563,11 +563,12 @@ time_to_live=-1
 
 def test_match():
     result = CeilometerConf(context_wrap(ceilometer_content))
-    assert result.data.get("DEFAULT").get("http_timeout") == "600"
-    assert result.data.get("DEFAULT").get("log_dir") == "/var/log/ceilometer"
-    assert result.data.get("api").get("host") == "192.0.2.10"
+    assert result.data.get("DEFAULT", "http_timeout") == "600"
+    assert result.data.get("DEFAULT", "log_dir") == "/var/log/ceilometer"
+    assert result.data.get("api", "host") == "192.0.2.10"
 
-    assert result.data.get("coordination").get("backend_url") == "redis://:chDWmHdH8dyjsmpCWfCEpJR87@192.0.2.7:6379/"
-    assert result.data.get("database").get("metering_time_to_live") == "-1"
-    assert result.data.get("database").get(
-        "connection") == "mongodb://192.0.2.11:27017,192.0.2.10:27017,192.0.2.12:27017/ceilometer?replicaSet=tripleo"
+    assert result.data.get("coordination", "backend_url") == \
+        "redis://:chDWmHdH8dyjsmpCWfCEpJR87@192.0.2.7:6379/"
+    assert result.data.get("database", "metering_time_to_live") == "-1"
+    assert result.data.get("database", "connection") == \
+        "mongodb://192.0.2.11:27017,192.0.2.10:27017,192.0.2.12:27017/ceilometer?replicaSet=tripleo"
