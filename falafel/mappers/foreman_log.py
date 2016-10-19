@@ -9,3 +9,8 @@ class SatelliteLog(LogFileOutput):
 @mapper('foreman_production.log')
 class ProductionLog(LogFileOutput):
     pass
+
+
+@mapper('candlepin.log')
+class CandlepinLog(LogFileOutput):
+    pass
