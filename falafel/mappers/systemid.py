@@ -1,9 +1,9 @@
 import xml.etree.ElementTree as ET
-from .. import Mapper, mapper
+from .. import Mapper, mapper, LegacyItemAccess
 
 
 @mapper('systemid')
-class SystemID(Mapper):
+class SystemID(LegacyItemAccess, Mapper):
     '''
     ---------------
     Return a SystemId object which contains a dict below:
