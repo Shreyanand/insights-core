@@ -45,7 +45,3 @@ class RHNConf(LegacyItemAccess, Mapper):
             elif multi_lines_key:
                 rhn[multi_lines_key].extend([i.strip() for i in line.split(',')] if ',' in line else [line])
         self.data = rhn
-
-    def __iter__(self):
-        for key in self.data:
-            yield key
