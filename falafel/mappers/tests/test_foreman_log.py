@@ -1,5 +1,6 @@
 from falafel.tests import context_wrap
 from falafel.mappers.foreman_log import SatelliteLog, ProductionLog
+from falafel.mappers.foreman_log import CandlepinLog, ProxyLog
 
 
 PRODUCTION_LOG = """
@@ -124,6 +125,23 @@ SATELLITE_OUT = """
 [DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Candlepin::Database/notify: subscribes to Class[Candlepin::Service]
 """.strip()
 
+CANDLEPIN_LOG = """
+2016-09-09 13:45:52,650 [req=bd5a4284-d280-4fc5-a3d5-fc976b7aa5cc, org=] INFO org.candlepin.common.filter.LoggingFilter - Request: verb=GET, uri=/candlepin/consumers/f7677b4b-c470-4626-86a4-2fdf2546af4b
+2016-09-09 13:45:52,784 [req=bd5a4284-d280-4fc5-a3d5-fc976b7aa5cc, org=ING_Luxembourg_SA] INFO  org.candlepin.common.filter.LoggingFilter - Response: status=200, content-type="application/json", time=134
+2016-09-09 13:45:52,947 [req=909ca4c5-f24e-4212-8f23-cc754d06ac57, org=] INFO org.candlepin.common.filter.LoggingFilter - Request: verb=GET, uri=/candlepin/consumers/f7677b4b-c470-4626-86a4-2fdf2546af4b/content_overrides
+2016-09-09 13:45:52,976 [req=909ca4c5-f24e-4212-8f23-cc754d06ac57, org=] INFO org.candlepin.common.filter.LoggingFilter - Response: status=200, content-type="application/json", time=29
+2016-09-09 13:45:53,072 [req=49becd26-5dfe-4d2f-8667-470519230d88, org=] INFO org.candlepin.common.filter.LoggingFilter - Request: verb=GET, uri=/candlepin/consumers/f7677b4b-c470-4626-86a4-2fdf2546af4b/release
+2016-09-09 13:45:53,115 [req=49becd26-5dfe-4d2f-8667-470519230d88, org=ING_Luxembourg_SA] INFO  org.candlepin.common.filter.LoggingFilter - Response: status=200, content-type="application/json", time=43
+""".strip()
+
+PROXY_LOG = """
+127.0.0.1 - - [31/May/2016:09:42:28 -0400] "GET /puppet/environments/KT_Encore_Library_RHEL_6_5/classes HTTP/1.1" 200 76785 6.1205
+127.0.0.1 - - [31/May/2016:09:42:38 -0400] "GET /puppet/environments/KT_Encore_Library_RHEL_7_6/classes HTTP/1.1" 200 76785 4.4754
+127.0.0.1 - - [31/May/2016:09:42:49 -0400] "GET /puppet/environments/KT_Encore_Library_RHEL6_8/classes HTTP/1.1" 200 76785 4.5776
+127.0.0.1 - - [31/May/2016:09:57:34 -0400] "GET /tftp/serverName HTTP/1.1" 200 38 0.0014
+E, [2016-05-31T09:57:34.884636 #4494] ERROR -- : Record 172.16.100.0/172.16.100.17 not found ]
+""".strip()
+
 
 def test_production_log():
     fm_log = ProductionLog(context_wrap(PRODUCTION_LOG))
@@ -131,6 +149,18 @@ def test_production_log():
     assert "Expired 48 Reports" in fm_log
     assert fm_log.get("Completed 200 OK in 93")[0] == \
         "2015-11-13 09:41:58 [I] Completed 200 OK in 93ms (Views: 2.9ms | ActiveRecord: 0.3ms)"
+
+
+def test_proxy_log():
+    px_log = ProxyLog(context_wrap(PROXY_LOG))
+    assert "ERROR -- " in px_log
+    assert len(px_log.get("KT_Encore_Library_RHEL")) == 3
+
+
+def test_candlepin_log():
+    cp_log = CandlepinLog(context_wrap(CANDLEPIN_LOG))
+    assert "req=49becd26-5dfe-4d2f-8667-470519230d88" in cp_log
+    assert len(cp_log.get("req=bd5a4284-d280-4fc5-a3d5-fc976b7aa5cc")) == 2
 
 
 def test_satellite_log():

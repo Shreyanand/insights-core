@@ -3,14 +3,17 @@ from .. import Mapper, mapper, get_active_lines, LegacyItemAccess
 
 @mapper('rhn.conf')
 class RHNConf(LegacyItemAccess, Mapper):
-
-    def parse_content(self, content):
-        """
-        Return a dict where
+    """Class to parse the configuration file ``rhn.conf``
+    Attributes:
+        data (dict): A dict where
         - keys are the row header
         - values are the option after the "=".
           Note: For settings with multiple options, the value is a list.
 
+    """
+
+    def parse_content(self, content):
+        """
         ---Sample---
         # Corporate gateway (hostname:PORT):
         server.satellite.http_proxy = corporate_gateway.example.com:8080
@@ -45,3 +48,7 @@ class RHNConf(LegacyItemAccess, Mapper):
             elif multi_lines_key:
                 rhn[multi_lines_key].extend([i.strip() for i in line.split(',')] if ',' in line else [line])
         self.data = rhn
+
+    def __iter__(self):
+        for key in self.data:
+            yield key
