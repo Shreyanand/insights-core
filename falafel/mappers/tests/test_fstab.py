@@ -29,6 +29,8 @@ def test_fstab():
     assert len(results) == 9
     sdb1 = None
     nfs_host = None
+
+    # Test of 'rows' iteration
     for result in results:
         if result.fs_spec == "/dev/sdb1":
             sdb1 = result
@@ -52,3 +54,6 @@ def test_fstab():
     assert nfs_host.fs_mntops.rsize == "32768"
     assert nfs_host.fs_freq == 0
     assert nfs_host.fs_passno == 0
+
+    assert results.mounted_on['/hdfs/data1'] == sdb1
+    assert results.mounted_on['/srv/rdu/cases/000'] == nfs_host
