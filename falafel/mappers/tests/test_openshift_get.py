@@ -530,6 +530,146 @@ kind: List
 metadata: {}
 """.strip()
 
+OC_GET_ROLEBINDING = """
+apiVersion: v1
+items:
+- apiVersion: v1
+  groupNames: null
+  kind: RoleBinding
+  metadata:
+    creationTimestamp: 2017-03-07T09:00:56Z
+    name: admin
+    namespace: foo
+    resourceVersion: "11803596"
+    selfLink: /oapi/v1/namespaces/foo/rolebindings/admin
+    uid: 93256034-0314-11e7-b98e-001a4a0101f0
+  roleRef:
+    name: admin
+  subjects:
+  - kind: SystemUser
+    name: system:admin
+  userNames:
+  - system:admin
+- apiVersion: v1
+  groupNames: null
+  kind: RoleBinding
+  metadata:
+    creationTimestamp: 2017-03-07T09:00:56Z
+    name: system:image-builders
+    namespace: foo
+    resourceVersion: "11803603"
+    selfLink: /oapi/v1/namespaces/foo/rolebindings/system:image-builders
+    uid: 93709567-0314-11e7-b98e-001a4a0101f0
+  roleRef:
+    name: system:image-builder
+  subjects:
+  - kind: ServiceAccount
+    name: builder
+    namespace: foo
+  userNames:
+  - system:serviceaccount:foo:builder
+- apiVersion: v1
+  groupNames: null
+  kind: RoleBinding
+  metadata:
+    creationTimestamp: null
+    name: myrole
+    namespace: foo
+    resourceVersion: "415"
+    selfLink: /oapi/v1/namespaces/foo/rolebindings/myrole
+  roleRef:
+    name: myrole
+    namespace: foo
+  subjects: null
+  userNames: null
+kind: List
+metadata: {}
+""".strip()
+
+OC_GET_PROJECT = """
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Project
+  metadata:
+    annotations:
+      openshift.io/description: ""
+      openshift.io/display-name: ""
+      openshift.io/requester: testuser
+      openshift.io/sa.scc.mcs: s0:c8,c2
+      openshift.io/sa.scc.supplemental-groups: 1000060000/10000
+      openshift.io/sa.scc.uid-range: 1000060000/10000
+    creationTimestamp: 2017-02-13T03:01:30Z
+    name: zjj-project
+    resourceVersion: "11040756"
+    selfLink: /oapi/v1/projects/zjj-project
+    uid: b83cdc59-f198-11e6-b98e-001a4a0101f0
+  spec:
+    finalizers:
+    - openshift.io/origin
+    - kubernetes
+  status:
+    phase: Active
+- apiVersion: v1
+  kind: Project
+  metadata:
+    annotations:
+      openshift.io/description: ""
+      openshift.io/display-name: ""
+      openshift.io/requester: testuser
+      openshift.io/sa.scc.mcs: s0:c11,c0
+      openshift.io/sa.scc.supplemental-groups: 1000110000/10000
+      openshift.io/sa.scc.uid-range: 1000110000/10000
+    creationTimestamp: 2016-12-27T07:49:13Z
+    name: test
+    resourceVersion: "9401953"
+    selfLink: /oapi/v1/projects/test
+    uid: f5f2a52c-cc08-11e6-8b9b-001a4a0101f0
+  spec:
+    finalizers:
+    - openshift.io/origin
+    - kubernetes
+  status:
+    phase: Active
+kind: List
+metadata: {}
+""".strip()
+
+OC_GET_ROLE = """
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Role
+  metadata:
+    creationTimestamp: 2016-08-30T16:13:03Z
+    name: shared-resource-viewer
+    namespace: openshift
+    resourceVersion: "94"
+    selfLink: /oapi/v1/namespaces/openshift/roles/shared-resource-viewer
+    uid: a10c3f88-6ecc-11e6-83c6-001a4a0101f0
+  rules:
+  - apiGroups: null
+    attributeRestrictions: null
+    resources:
+    - imagestreamimages
+    - imagestreamimports
+    - imagestreammappings
+    - imagestreams
+    - imagestreamtags
+    - templates
+    verbs:
+    - get
+    - list
+  - apiGroups: null
+    attributeRestrictions: null
+    resources:
+    - imagestreams/layers
+    verbs:
+    - get
+kind: List
+metadata: {}
+""".strip()
+
 
 def test_oc_get_pod_yml():
     result = openshift_get.OcGetPod(context_wrap(OC_GET_POD))
@@ -557,3 +697,24 @@ def test_oc_get_dc_yml():
     assert result.data['items'][0]['kind'] == 'DeploymentConfig'
     assert result.data['items'][0]['metadata']['generation'] == 3
     assert result.get_dc()["router-1"]["metadata"]["namespace"] == "zjj-project"
+
+
+def test_oc_get_rolebinding_yml():
+    result = openshift_get.OcGetRolebinding(context_wrap(OC_GET_ROLEBINDING))
+    assert result.data['items'][0]['kind'] == 'RoleBinding'
+    assert result.data['items'][0]['metadata']['resourceVersion'] == "11803596"
+    assert result.get_rolebind()["myrole"]["roleRef"]["namespace"] == "foo"
+
+
+def test_oc_get_project_yml():
+    result = openshift_get.OcGetProject(context_wrap(OC_GET_PROJECT))
+    assert result.data['items'][0]['kind'] == 'Project'
+    assert result.data['items'][0]['metadata']['resourceVersion'] == "11040756"
+    assert result.get_project()["test"]["status"]["phase"] == "Active"
+
+
+def test_oc_get_role_yml():
+    result = openshift_get.OcGetRole(context_wrap(OC_GET_ROLE))
+    assert result.data['items'][0]['kind'] == 'Role'
+    assert result.data['items'][0]['metadata']['resourceVersion'] == "94"
+    assert result.get_role()["shared-resource-viewer"]["metadata"]["uid"] == "a10c3f88-6ecc-11e6-83c6-001a4a0101f0"
