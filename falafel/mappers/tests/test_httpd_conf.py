@@ -49,7 +49,7 @@ HttpdConf.filters.extend([
 ])
 
 
-def test_get_filter_string_1():
+def test_get_httpd_conf_1():
     context = context_wrap(HTTPD_CONF_1, path=HTTPD_CONF_PATH)
     result = HttpdConf(context)
 
@@ -62,7 +62,7 @@ def test_get_filter_string_1():
     assert result.file_name == "httpd.conf"
 
 
-def test_get_filter_string_2():
+def test_get_httpd_conf_2():
     context = context_wrap(HTTPD_CONF_D_1, path=HTTPD_CONF_D_PATH)
     result = HttpdConf(context)
 
