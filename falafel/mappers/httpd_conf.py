@@ -104,15 +104,13 @@ class HttpdConf(LegacyItemAccess, Mapper):
             try:
                 # new IfModule section start
                 if line.startswith('<IfModule'):
-                    if 'prefork.c' in line:
-                        sect = 'MPM_prefork'
-                    elif 'worker.c' in line:
-                        sect = 'MPM_worker'
+                    sect = "MPM_{}".format(line.split()[-1].split('.')[0])
                 # section end
                 elif line.startswith('</IfModule'):
                     sect = None
                 else:
                     k, rest = [s.strip() for s in line.split(None, 1)]
+                    rest = rest.strip('\'"')
                     if sect:
                         if sect not in self.data:
                             self.data[sect] = {k: rest}
