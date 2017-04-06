@@ -671,6 +671,61 @@ metadata: {}
 """.strip()
 
 
+OC_GET_PV = """
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: PersistentVolume
+  metadata:
+    annotations:
+      pv.kubernetes.io/bound-by-controller: "yes"
+    creationTimestamp: 2017-03-09T15:23:17Z
+    name: registry-volume
+    resourceVersion: "745"
+    selfLink: /api/v1/persistentvolumes/registry-volume
+    uid: 52394d79-04dc-11e7-ab1f-001a4a0101d2
+  spec:
+    accessModes:
+    - ReadWriteMany
+    capacity:
+      storage: 5Gi
+    claimRef:
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      name: registry-claim
+      namespace: default
+      resourceVersion: "743"
+      uid: 52c44068-04dc-11e7-ab1f-001a4a0101d2
+    nfs:
+      path: /exports/registry
+      server: master.ose33.com
+    persistentVolumeReclaimPolicy: Retain
+  status:
+    phase: Bound
+- apiVersion: v1
+  kind: PersistentVolume
+  metadata:
+    creationTimestamp: 2017-04-05T10:44:54Z
+    name: registry-volume-zjj
+    resourceVersion: "934892"
+    selfLink: /api/v1/persistentvolumes/registry-volume-zjj
+    uid: e7519f6c-19ec-11e7-ab1f-001a4a0101d2
+  spec:
+    accessModes:
+    - ReadWriteMany
+    capacity:
+      storage: 10Gi
+    nfs:
+      path: /nfs
+      server: 10.66.208.147
+    persistentVolumeReclaimPolicy: Recycle
+  status:
+    phase: Available
+kind: List
+metadata: {}
+""".strip()
+
+
 def test_oc_get_pod_yml():
     result = openshift_get.OcGetPod(context_wrap(OC_GET_POD))
     assert result.data['items'][0]['metadata']['annotations']['openshift.io/scc'] == 'anyuid'
@@ -718,3 +773,10 @@ def test_oc_get_role_yml():
     assert result.data['items'][0]['kind'] == 'Role'
     assert result.data['items'][0]['metadata']['resourceVersion'] == "94"
     assert result.get_role()["shared-resource-viewer"]["metadata"]["uid"] == "a10c3f88-6ecc-11e6-83c6-001a4a0101f0"
+
+
+def test_oc_get_pv_yml():
+    result = openshift_get.OcGetPv(context_wrap(OC_GET_PV))
+    assert result.data['items'][0]['kind'] == 'PersistentVolume'
+    assert result.data['items'][0]['metadata']['name'] == 'registry-volume'
+    assert result.get_pv()['registry-volume-zjj']['spec']['capacity']['storage'] == '10Gi'
