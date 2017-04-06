@@ -39,7 +39,8 @@ from falafel.core.plugins import reducer
 from falafel.mappers.httpd_conf import HttpdConf
 
 
-class HttpConfAllReducer(object):
+@reducer(requires=[HttpdConf], shared=True)
+class HttpdConfAll(object):
     """
     A reducer for parsing all httpd configurations
     """
@@ -88,9 +89,3 @@ class HttpConfAllReducer(object):
         if section:
             return self.data.get(section, {}).get(directive)
         return self.data.get(directive)
-
-
-@reducer(requires=[HttpdConf], shared=True)
-class HttpdConfAll(HttpConfAllReducer):
-    """Class for collecting and sorting all the httpd configuration files"""
-    pass
