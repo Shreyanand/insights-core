@@ -726,6 +726,63 @@ metadata: {}
 """.strip()
 
 
+OC_GET_PVC = """
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    annotations:
+      pv.kubernetes.io/bind-completed: "yes"
+      pv.kubernetes.io/bound-by-controller: "yes"
+    creationTimestamp: 2017-03-09T15:23:18Z
+    name: registry-claim
+    namespace: default
+    resourceVersion: "747"
+    selfLink: /api/v1/namespaces/default/persistentvolumeclaims/registry-claim
+    uid: 52c44068-04dc-11e7-ab1f-001a4a0101d2
+  spec:
+    accessModes:
+    - ReadWriteMany
+    resources:
+      requests:
+        storage: 5Gi
+    volumeName: registry-volume
+  status:
+    accessModes:
+    - ReadWriteMany
+    capacity:
+      storage: 5Gi
+    phase: Bound
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    annotations:
+      pv.kubernetes.io/bind-completed: "yes"
+    creationTimestamp: 2017-04-12T18:40:43Z
+    name: registry-claim-test1
+    namespace: default
+    resourceVersion: "1084833"
+    selfLink: /api/v1/namespaces/default/persistentvolumeclaims/registry-claim-test1
+    uid: 89169428-1faf-11e7-b236-001a4a0101d2
+  spec:
+    accessModes:
+    - ReadWriteMany
+    resources:
+      requests:
+        storage: 5Gi
+    volumeName: registry-volume-zjj
+  status:
+    accessModes:
+    - ReadWriteMany
+    capacity:
+      storage: 10Gi
+    phase: Bound
+kind: List
+metadata: {}
+""".strip()
+
+
 def test_oc_get_pod_yml():
     result = openshift_get.OcGetPod(context_wrap(OC_GET_POD))
     assert result.data['items'][0]['metadata']['annotations']['openshift.io/scc'] == 'anyuid'
@@ -780,3 +837,10 @@ def test_oc_get_pv_yml():
     assert result.data['items'][0]['kind'] == 'PersistentVolume'
     assert result.data['items'][0]['metadata']['name'] == 'registry-volume'
     assert result.get_pv()['registry-volume-zjj']['spec']['capacity']['storage'] == '10Gi'
+
+
+def test_oc_get_pvc_yml():
+    result = openshift_get.OcGetPvc(context_wrap(OC_GET_PVC))
+    assert result.data['items'][0]['kind'] == 'PersistentVolumeClaim'
+    assert result.data['items'][0]['metadata']['name'] == 'registry-claim'
+    assert result.get_pvc()['registry-claim-test1']['spec']['volumeName'] == 'registry-volume-zjj'
