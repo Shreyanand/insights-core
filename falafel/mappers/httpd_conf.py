@@ -104,7 +104,7 @@ class HttpdConf(LegacyItemAccess, Mapper):
             try:
                 # new IfModule section start
                 if line.startswith('<IfModule'):
-                    sect = "MPM_{}".format(line.split()[-1].split('.')[0])
+                    sect = "MPM_{}".format(line.split()[-1].split('.')[0].lower())
                 # section end
                 elif line.startswith('</IfModule'):
                     sect = None
