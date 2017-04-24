@@ -57,7 +57,7 @@ class Facter(LegacyItemAccess, Mapper):
         facts_info = {}
         for line in content:
             if ' => ' in line:
-                key, value = [k.strip() for k in line.split('=>')]
+                key, value = [k.strip() for k in line.split('=>', 1)]
                 facts_info[key] = value
 
         for k, v in facts_info.items():
