@@ -87,6 +87,7 @@ swapsize_mb => 0.00
 timezone => CDT
 type => Other
 uniqueid => 17ac321b
+system_uptime => {"seconds"=>3663199, "hours"=>1017, "days"=>42, "uptime"=>"42 days"}
 uptime => 42 days
 uptime_days => 42
 uptime_hours => 1017
