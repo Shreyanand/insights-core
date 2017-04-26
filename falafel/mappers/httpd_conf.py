@@ -84,10 +84,11 @@ Examples:
 
 """
 
+import re
 from .. import Mapper, mapper, get_active_lines, LegacyItemAccess
 
 
-@mapper('httpd.conf')
+@mapper('httpd.conf', filters=['IncludeOptional'])
 @mapper('httpd.conf.d')
 class HttpdConf(LegacyItemAccess, Mapper):
     """
@@ -95,29 +96,56 @@ class HttpdConf(LegacyItemAccess, Mapper):
     and trailing spaces.  The "<IfModule prefork.c>" and "<IfModule worker.c>"
     sections are parsed into 'MPM_prefork' and 'MPM_worker' sub-dictionaries
     respectively.
+
+    If the file is ``httpd.conf``, it also stores first half, before
+    ``IncludeOptional conf.d/*.conf`` line, and the rest, to the ``first_half``
+    and ``second_half`` attributes respectively.
     """
+    def __init__(self, *args, **kwargs):
+        self.data = {}
+        """dict: Dictionary of parsed data."""
+        self.first_half = {}
+        """dict: Parsed data from main config file before inclusion of other files."""
+        self.second_half = {}
+        """dict: Parsed data from main config file after inclusion of other files."""
+
+        super(HttpdConf, self).__init__(*args, **kwargs)
 
     def parse_content(self, content):
-        self.data = {}
-        sect = None
+        where_to_store = self.first_half  # Set which part of file is the parser at
+
+        # Flag to be used for different parsing of the main config file
+        main_config = self.file_name == 'httpd.conf'
+
+        section = None
         for line in get_active_lines(content):
-            try:
-                # new IfModule section start
-                if line.startswith('<IfModule'):
-                    sect = "MPM_{}".format(line.split()[-1].split('.')[0].lower())
-                # section end
-                elif line.startswith('</IfModule'):
-                    sect = None
-                else:
-                    k, rest = [s.strip() for s in line.split(None, 1)]
-                    rest = rest.strip('\'"')
-                    if sect:
-                        if sect not in self.data:
-                            self.data[sect] = {k: rest}
-                        else:
-                            self.data[sect][k] = rest
+            if main_config and where_to_store is not self.second_half:
+                # Dividing line looks like 'IncludeOptional conf.d/*.conf'
+                if re.search(r'^\s*IncludeOptional\s+conf\.d', line):
+                    where_to_store = self.second_half
+
+            # new IfModule section start
+            if line.startswith('<IfModule'):
+                section = "MPM_{}".format(line.split()[-1].split('.')[0].lower())
+            # section end
+            elif line.startswith('</IfModule'):
+                section = None
+            else:
+                try:
+                    option, value = [s.strip() for s in line.split(None, 1)]
+                except ValueError:
+                    continue  # Skip lines which are not 'Option Value'
+                value = value.strip('\'"')
+                if section:
+                    if section not in self.data:
+                        self.data[section] = {option: value}
+                        if main_config:
+                            where_to_store[section] = {option: value}
                     else:
-                        self.data[k] = rest
-            except Exception:
-                # Yep, throw away all the problems.
-                pass
+                        self.data[section][option] = value
+                        if main_config:
+                            where_to_store[section][option] = value
+                else:
+                    self.data[option] = value
+                    if main_config:
+                        where_to_store[option] = value
