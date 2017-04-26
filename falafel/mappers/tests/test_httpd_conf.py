@@ -43,6 +43,12 @@ SSLCipherSuite ALL:!ADH:!EXPORT:!SSLv2:RC4+RSA:+HIGH:+MEDIUM:+LOW
    MaxClients
 """.strip()
 
+HTTPD_CONF_SPLIT = '''
+LogLevel warn
+IncludeOptional conf.d/*.conf
+EnableSendfile on
+'''.strip()
+
 HttpdConf.filters.extend([
     'SSLProtocol', 'NSSProtocol', 'RequestHeader', 'FcgidPassHeader'
     '<IfModule worker.c>', '<IfModule prefork.c>', '</IfModule>', 'MaxClients'
@@ -73,3 +79,33 @@ def test_get_httpd_conf_2():
     assert "MaxClients" not in result.data
     assert result.file_path == HTTPD_CONF_D_PATH
     assert result.file_name == "default.conf"
+
+
+def test_main_config_splitting():
+    context = context_wrap(HTTPD_CONF_SPLIT, path=HTTPD_CONF_PATH)
+    result = HttpdConf(context)
+
+    assert result.file_path == HTTPD_CONF_PATH
+    assert result.file_name == "httpd.conf"
+    assert result.data['LogLevel'] == 'warn'
+    assert result.data['EnableSendfile'] == 'on'
+    assert result.first_half['LogLevel'] == 'warn'
+    assert result.second_half['EnableSendfile'] == 'on'
+
+
+def test_main_config_no_splitting():
+    context = context_wrap(HTTPD_CONF_1, path=HTTPD_CONF_PATH)
+    result = HttpdConf(context)
+
+    assert result.file_path == HTTPD_CONF_PATH
+    assert result.file_name == "httpd.conf"
+    assert result.data == result.first_half
+    assert result.second_half == {}
+
+
+def test_main_config_no_main_config():
+    context = context_wrap(HTTPD_CONF_D_1, path=HTTPD_CONF_D_PATH)
+    result = HttpdConf(context)
+
+    assert result.first_half == {}
+    assert result.second_half == {}
