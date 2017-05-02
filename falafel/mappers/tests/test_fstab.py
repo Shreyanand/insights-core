@@ -47,6 +47,7 @@ def test_fstab():
     assert 'noquota' in sdb1.fs_mntops
     assert sdb1.fs_freq == 0
     assert sdb1.fs_passno == 0
+    assert sdb1.raw == '/dev/sdb1 /hdfs/data1 xfs rw,relatime,seclabel,attr2,inode64,noquota 0 0'
     assert nfs_host is not None
     assert nfs_host.fs_spec == "nfs_hostname.redhat.com:/nfs_share/data"
     assert nfs_host.fs_file == "/srv/rdu/cases/000"
@@ -58,6 +59,7 @@ def test_fstab():
     assert nfs_host.fs_freq == 0
     assert nfs_host.fs_passno == 0
     assert dev_vg0.fs_mntops.data == 'writeback'
+    assert dev_vg0.raw == '/dev/mapper/vg0-lv2 /test1             ext4 defaults,data=writeback     1 1'
     for opt, v in dev_vg0.fs_mntops:
         if opt.startswith('data'):
             assert v == 'writeback'
