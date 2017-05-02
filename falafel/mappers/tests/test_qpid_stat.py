@@ -63,6 +63,16 @@ def test_qpid_stat_q():
     assert qpid_list.data[5].get('cons') == '1'
     assert qpid_list.data[5].get('bind') == '2'
 
+    # test iteration
+    assert [d['queue'] for d in qpid_list] == [
+        '00d6cc19-15fc-4b7c-af3c-6a38e7bb386d:1.0',
+        'prrhss001058.infra.novamedia.com:event',
+        'celery',
+        'pulp.agent.836a7366-4790-482d-b3bc-efee9d42b3cd',
+        'reserved_resource_worker-7@prrhss001058.infra.novamedia.com.celery.pidbox',
+        'reserved_resource_worker-7@prrhss001058.infra.novamedia.com.dq',
+    ]
+
 
 def test_qpid_stat_u():
     qpid_list = qpid_stat.QpidStatU(context_wrap(QPID_STAT_U))
@@ -94,3 +104,13 @@ def test_qpid_stat_u():
     assert qpid_list.data[2].get('sessUnacked') == '0'
     assert qpid_list.data[3].get('delivered') == '363,228'
     assert qpid_list.data[5].get('subscr') == 'katello_event_queue'
+
+    # test iteration
+    assert [d['queue'] for d in qpid_list] == [
+        '00d6cc19-15fc-4b7c-af3c-6a38e7bb386d:1.0',
+        'pulp.agent.c6a430bc-5ec7-42f8-99ce-f320ed0b9113',
+        'prrhss001058.infra.novamedia.com:event',
+        'celeryev.4c77bd03-1cde-49eb-bdc0-b7c38f9ff93d',
+        'celery',
+        'katello_event_queue',
+    ]
