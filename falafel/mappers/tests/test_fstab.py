@@ -19,6 +19,7 @@ FS_TAB_DATA = ['#',
                '/dev/sdd1 /hdfs/data3 xfs rw,relatime,seclabel,attr2,inode64,noquota 0 0',
                'localhost:/ /mnt/hdfs nfs rw,vers=3,proto=tcp,nolock,timeo=600 0 0',
                ' ',
+               '/dev/mapper/vg0-lv2 /test1             ext4 defaults,data=writeback     1 1',
                'nfs_hostname.redhat.com:/nfs_share/data     /srv/rdu/cases/000  nfs     ro,defaults,hard,intr,bg,noatime,nodev,nosuid,nfsvers=3,tcp,rsize=32768,wsize=32768     0']
 
 
@@ -26,7 +27,7 @@ def test_fstab():
     context = context_wrap(FS_TAB_DATA)
     results = fstab.FSTab(context)
     assert results is not None
-    assert len(results) == 9
+    assert len(results) == 10
     sdb1 = None
     nfs_host = None
 
@@ -36,12 +37,14 @@ def test_fstab():
             sdb1 = result
         elif result.fs_spec.startswith("nfs_hostname.redhat.com:"):
             nfs_host = result
+        elif result.fs_spec.startswith("/dev/mapper/vg0"):
+            dev_vg0 = result
     assert sdb1 is not None
     assert sdb1.fs_file == "/hdfs/data1"
     assert sdb1.fs_vfstype == "xfs"
     assert sdb1.fs_mntops.rw
     assert sdb1.fs_mntops.relatime
-    assert 'noquota' in sdb1.fs_mntops.data
+    assert 'noquota' in sdb1.fs_mntops
     assert sdb1.fs_freq == 0
     assert sdb1.fs_passno == 0
     assert nfs_host is not None
@@ -50,10 +53,14 @@ def test_fstab():
     assert nfs_host.fs_vfstype == "nfs"
     assert nfs_host.fs_mntops.ro
     assert nfs_host.fs_mntops.hard
-    assert 'bg' in nfs_host.fs_mntops.data
+    assert 'bg' in nfs_host.fs_mntops
     assert nfs_host.fs_mntops.rsize == "32768"
     assert nfs_host.fs_freq == 0
     assert nfs_host.fs_passno == 0
+    assert dev_vg0.fs_mntops.data == 'writeback'
+    for opt, v in dev_vg0.fs_mntops:
+        if opt.startswith('data'):
+            assert v == 'writeback'
 
     assert results.mounted_on['/hdfs/data1'] == sdb1
     assert results.mounted_on['/srv/rdu/cases/000'] == nfs_host
