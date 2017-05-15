@@ -31,7 +31,6 @@ def test_fstab():
     sdb1 = None
     nfs_host = None
 
-    # Test of 'rows' iteration
     for result in results:
         if result.fs_spec == "/dev/sdb1":
             sdb1 = result
