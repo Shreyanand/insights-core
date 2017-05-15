@@ -83,6 +83,7 @@ Examples:
     '0'
 
 """
+from collections import namedtuple
 
 import re
 from .. import Mapper, mapper, get_active_lines, LegacyItemAccess
@@ -100,15 +101,27 @@ class HttpdConf(LegacyItemAccess, Mapper):
     If the file is ``httpd.conf``, it also stores first half, before
     ``IncludeOptional conf.d/*.conf`` line, and the rest, to the ``first_half``
     and ``second_half`` attributes respectively.
+
+    Attributes:
+        data (dict): Dictionary of parsed data in format of {option: value} or
+                     {section: {option: value}}.
+        full_data (dict): Dictionary of parsed data with key being option and value a named tuple
+                          with the following properties:
+                          - ``value`` - the value of the keyword.
+                          - ``line`` - the complete line as found in the config file.
+        first_half (dict): Parsed data from main config file before inclusion of other files in the
+                           same format as ``full_data``.
+        second_half (dict): Parsed data from main config file after inclusion of other files in the
+                            same format as ``full_data``.
     """
+
+    ParsedData = namedtuple('ParsedData', ['value', 'line'])
+
     def __init__(self, *args, **kwargs):
         self.data = {}
-        """dict: Dictionary of parsed data."""
+        self.full_data = {}
         self.first_half = {}
-        """dict: Parsed data from main config file before inclusion of other files."""
         self.second_half = {}
-        """dict: Parsed data from main config file after inclusion of other files."""
-
         super(HttpdConf, self).__init__(*args, **kwargs)
 
     def parse_content(self, content):
@@ -139,13 +152,16 @@ class HttpdConf(LegacyItemAccess, Mapper):
                 if section:
                     if section not in self.data:
                         self.data[section] = {option: value}
+                        self.full_data[section] = {option: self.ParsedData(value, line)}
                         if main_config:
-                            where_to_store[section] = {option: value}
+                            where_to_store[section] = {option: self.ParsedData(value, line)}
                     else:
                         self.data[section][option] = value
+                        self.full_data[section][option] = self.ParsedData(value, line)
                         if main_config:
-                            where_to_store[section][option] = value
+                            where_to_store[section][option] = self.ParsedData(value, line)
                 else:
                     self.data[option] = value
+                    self.full_data[option] = self.ParsedData(value, line)
                     if main_config:
-                        where_to_store[option] = value
+                        where_to_store[option] = self.ParsedData(value, line)

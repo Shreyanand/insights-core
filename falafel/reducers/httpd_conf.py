@@ -7,6 +7,7 @@ HttpdConf generated from each httpd configuration files and get the valid
 settings by sorting the file's in alphanumeric order. It provides an interface
 to get the valid value of specific directive.
 
+It also correctly handles position of ``IncludeOptional conf.d/*.conf`` line.
 
 Examples:
     >>> HTTPD_CONF_1 = '''
@@ -33,7 +34,10 @@ Examples:
     ('512', '00-z.conf')
     >>> htd_conf.get_valid_setting("DocumentRoot")
     ('/var/www/html', '00-z.conf')
+    >>> htd_conf.get_valid_setting_full("DocumentRoot")
+    ParsedData('/var/www/html', 'DocumentRoot "/var/www/html"', '00-z.conf', '/etc/httpd/conf.d/00-z.conf')
 """
+from collections import namedtuple
 
 from falafel.core.plugins import reducer
 from falafel.mappers.httpd_conf import HttpdConf
@@ -42,38 +46,80 @@ from falafel.mappers.httpd_conf import HttpdConf
 @reducer(requires=[HttpdConf], shared=True)
 class HttpdConfAll(object):
     """
-    A reducer for parsing all httpd configurations
+    A reducer for parsing all httpd configurations. It parses all sources and makes a composition
+    to store actual loaded values of the settings as well as information about parsed configuration
+    files and raw values.
+
+    Note:
+        ``ParsedData`` is a named tuple with the following properties:
+            - ``value`` - the value of the option.
+            - ``line`` - the complete line as found in the config file.
+            - ``file_name`` - the config file name.
+            - ``file_path`` - the complete config file path.
+
+        ``ConfigData`` is a named tuple with the following properties:
+            - ``file_name`` - the config file name.
+            - ``file_path`` - the complete config file path.
+            - ``data_dict`` - original full_data dictionary from shared mapper.
+
+    Attributes:
+        data (dict): Dictionary of parsed active settings in format {option: ParsedData}.
+        config_data (list): List of parsed config files in containing ConfigData named tuples.
     """
+    ParsedData = namedtuple('ParsedData', ['value', 'line', 'file_name', 'file_path'])
+    ConfigData = namedtuple('ConfigData', ['file_name', 'file_path', 'full_data_dict'])
+
     def __init__(self, local, shared):
-        htp_inf = []
-        def_inf = {}
-        for htp in shared[HttpdConf]:
-            fn = htp.file_name
-            if fn == 'httpd.conf':
-                def_inf = htp.data
-            else:
-                htp_inf.append({fn: htp.data})
-        # Sort the configuration files
-        htp_inf.sort()
-        # httpd.conf is always the first one to check
-        all_data = [{'httpd.conf': def_inf}]
-        all_data.extend(htp_inf)
-        # Get the valid setting for each directive from all `.conf` file in
-        # files' alphanumerical order. And record the file's name.
         self.data = {}
-        for file_conf in all_data:
-            fn = file_conf.keys()[0]
-            data = file_conf.values()[0]
-            for dkey, dval in data.iteritems():
-                if isinstance(dval, dict):
+        self.config_data = []
+
+        config_files_data = []
+        main_config_data = []
+
+        for httpd_mapper in shared[HttpdConf]:
+            file_name = httpd_mapper.file_name
+            file_path = httpd_mapper.file_path
+
+            # Flag to be used for different handling of the main config file
+            main_config = httpd_mapper.file_name == 'httpd.conf'
+
+            if not main_config:
+                config_files_data.append(self.ConfigData(file_name, file_path,
+                                                         httpd_mapper.full_data))
+            else:
+                main_config_data.append(self.ConfigData(file_name, file_path,
+                                                        httpd_mapper.first_half))
+                main_config_data.append(self.ConfigData(file_name, file_path,
+                                                        httpd_mapper.second_half))
+
+        # Sort configuration files
+        config_files_data.sort()
+
+        # Add both parts of main configuration file and store as attribute.
+        # These values can be used when looking for bad settings which are not actually active
+        # but may become active if other configurations are changed
+        if main_config_data:
+            self.config_data = [main_config_data[0]] + config_files_data + [main_config_data[1]]
+        else:
+            self.config_data = config_files_data
+
+        # Store active settings - the last parsed value us stored
+        for file_name, file_path, full_data in self.config_data:
+            for option, parsed_data in full_data.iteritems():
+                if isinstance(parsed_data, dict):
                     # For section
-                    if dkey not in self.data:
-                        self.data[dkey] = {}
-                    for k, v in dval.iteritems():
-                        self.data[dkey][k] = (v, fn)
+                    section = option
+                    content = parsed_data
+                    if section not in self.data:
+                        self.data[section] = {}
+
+                    for k, pd in content.iteritems():
+                        self.data[section][k] = self.ParsedData(pd.value, pd.line, file_name,
+                                                                file_path)
                 else:
                     # For directive
-                    self.data[dkey] = (dval, fn)
+                    self.data[option] = self.ParsedData(parsed_data.value, parsed_data.line,
+                                                        file_name, file_path)
 
     def get_valid_setting(self, directive, section=None):
         """
@@ -84,7 +130,25 @@ class HttpdConfAll(object):
             section (str): The section if the directive belongs to one.
 
         Returns:
-            (tuple): ('the value of the directive', 'the configuration file')
+            (tuple): ('the value of the directive', 'the configuration file') if directive exists,
+                     else None
+        """
+        if section:
+            parsed_data = self.data.get(section, {}).get(directive)
+            return (parsed_data.value, parsed_data.file_name) if parsed_data is not None else None
+        parsed_data = self.data.get(directive)
+        return (parsed_data.value, parsed_data.file_name) if parsed_data is not None else None
+
+    def get_valid_setting_full(self, directive, section=None):
+        """
+        Return the valid parsed data of specified directive as a named tuple with .
+
+        Parameters:
+            directive (str): The directive to look for.
+            section (str): The section if the directive belongs to one.
+
+        Returns:
+            (namedtuple): Named tuple ParsedData.
         """
         if section:
             return self.data.get(section, {}).get(directive)

@@ -79,6 +79,8 @@ def test_get_httpd_conf_2():
     assert "MaxClients" not in result.data
     assert result.file_path == HTTPD_CONF_D_PATH
     assert result.file_name == "default.conf"
+    assert result.full_data["SSLProtocol"].value == '-ALL +SSLv3'
+    assert result.full_data["SSLProtocol"].line == 'SSLProtocol -ALL +SSLv3'
 
 
 def test_main_config_splitting():
@@ -89,8 +91,9 @@ def test_main_config_splitting():
     assert result.file_name == "httpd.conf"
     assert result.data['LogLevel'] == 'warn'
     assert result.data['EnableSendfile'] == 'on'
-    assert result.first_half['LogLevel'] == 'warn'
-    assert result.second_half['EnableSendfile'] == 'on'
+    assert result.first_half['LogLevel'].value == 'warn'
+    assert result.first_half['LogLevel'].line == 'LogLevel warn'
+    assert result.second_half['EnableSendfile'].value == 'on'
 
 
 def test_main_config_no_splitting():
@@ -99,7 +102,7 @@ def test_main_config_no_splitting():
 
     assert result.file_path == HTTPD_CONF_PATH
     assert result.file_name == "httpd.conf"
-    assert result.data == result.first_half
+    assert result.full_data == result.first_half
     assert result.second_half == {}
 
 
