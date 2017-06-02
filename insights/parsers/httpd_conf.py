@@ -104,11 +104,13 @@ class HttpdConf(LegacyItemAccess, Parser):
 
     Attributes:
         data (dict): Dictionary of parsed data in format of {option: value} or
-                     {section: {option: value}}.
-        full_data (dict): Dictionary of parsed data with key being option and value a named tuple
-                          with the following properties:
+                     {section: {option: value}}. Stores last found value.
+        full_data (dict): Dictionary of parsed data with key being the option and value a list of
+                          named tuples with the following properties:
                           - ``value`` - the value of the keyword.
                           - ``line`` - the complete line as found in the config file.
+                          The reason why it is a list is to store data for directives which can use
+                          selective overriding such as ``UserDir``.
         first_half (dict): Parsed data from main config file before inclusion of other files in the
                            same format as ``full_data``.
         second_half (dict): Parsed data from main config file after inclusion of other files in the
@@ -125,6 +127,24 @@ class HttpdConf(LegacyItemAccess, Parser):
         super(HttpdConf, self).__init__(*args, **kwargs)
 
     def parse_content(self, content):
+        def add_to_dict_list(dictionary, key, element):
+            """
+            Utility function to create a dictionary of lists instead of using defaultdict, because
+            rule would be able to unknowingly modify defaultdict structures.
+
+            Args:
+                dictionary (dict): The changed dictionary.
+                key (str): The dictionary key to be changed. If it is in the dictionary, ``element``
+                           is going to be appended to ``dictionary[key]`` list. If the ``key`` is
+                           not in the dictionary, it is created so that
+                           ``dictionary[key] = [element]``.
+                element (Object): A value to be appended to the list under ``dictionary[key]``.
+            """
+            if key not in dictionary:
+                dictionary[key] = [element]
+            else:
+                dictionary[key].append(element)
+
         where_to_store = self.first_half  # Set which part of file is the parser at
 
         # Flag to be used for different parsing of the main config file
@@ -149,19 +169,20 @@ class HttpdConf(LegacyItemAccess, Parser):
                 except ValueError:
                     continue  # Skip lines which are not 'Option Value'
                 value = value.strip('\'"')
+                parsed_data = self.ParsedData(value, line)
+
                 if section:
                     if section not in self.data:
-                        self.data[section] = {option: value}
-                        self.full_data[section] = {option: self.ParsedData(value, line)}
+                        self.data[section] = {}
+                        self.full_data[section] = {}
                         if main_config:
-                            where_to_store[section] = {option: self.ParsedData(value, line)}
-                    else:
-                        self.data[section][option] = value
-                        self.full_data[section][option] = self.ParsedData(value, line)
-                        if main_config:
-                            where_to_store[section][option] = self.ParsedData(value, line)
+                            where_to_store[section] = {}
+                    self.data[section][option] = value
+                    add_to_dict_list(self.full_data[section], option, parsed_data)
+                    if main_config:
+                        add_to_dict_list(where_to_store[section], option, parsed_data)
                 else:
                     self.data[option] = value
-                    self.full_data[option] = self.ParsedData(value, line)
+                    add_to_dict_list(self.full_data, option, parsed_data)
                     if main_config:
-                        where_to_store[option] = self.ParsedData(value, line)
+                        add_to_dict_list(where_to_store, option, parsed_data)

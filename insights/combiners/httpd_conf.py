@@ -63,7 +63,10 @@ class HttpdConfAll(object):
             - ``data_dict`` - original full_data dictionary from parser.
 
     Attributes:
-        data (dict): Dictionary of parsed active settings in format {option: ParsedData}.
+        data (dict): Dictionary of parsed settings in format {option: [ParsedData, ParsedData]}.
+                     It stores a list of parsed values, usually only the last value is needed,
+                     except situations when directives which can use selective overriding,
+                     such as ``UserDir``, are used.
         config_data (list): List of parsed config files in containing ConfigData named tuples.
     """
     ParsedData = namedtuple('ParsedData', ['value', 'line', 'file_name', 'file_path'])
@@ -114,16 +117,53 @@ class HttpdConfAll(object):
                         self.data[section] = {}
 
                     for k, pd in content.iteritems():
-                        self.data[section][k] = self.ParsedData(pd.value, pd.line, file_name,
-                                                                file_path)
+                        values = [self.ParsedData(a.value, a.line, file_name, file_path)
+                                  for a in pd]
+                        self.data[section][k] = values
                 else:
                     # For directive
-                    self.data[option] = self.ParsedData(parsed_data.value, parsed_data.line,
-                                                        file_name, file_path)
+                    values = [self.ParsedData(a.value, a.line, file_name, file_path)
+                              for a in parsed_data]
+                    self.data[option] = values
+
+    def get_setting_list(self, directive, section=None):
+        """
+        Returns the parsed data of the specified directive as a list of named tuples.
+
+        Parameters:
+            directive (str): The directive to look for.
+            section (str): The section if the directive belongs to one.
+
+        Returns:
+            (list): List of named tuples ParsedData, in order how they are parsed. If directive
+                    does not exist, it returns None.
+        """
+        if section:
+            return self.data.get(section, {}).get(directive)
+        return self.data.get(directive)
+
+    def get_active_setting(self, directive, section=None):
+        """
+        Return the active parsed setting of the specified directive as a named tuple. It is the
+        last parsed value and for most directives it is also the active setting.
+
+        Parameters:
+            directive (str): The directive to look for.
+            section (str): The section if the directive belongs to one.
+
+        Returns:
+            (namedtuple): Named tuple ParsedData if directive exists, else None.
+        """
+        values_list = self.get_setting_list(directive, section)
+        if values_list is None:
+            return None
+        else:
+            return values_list[-1]
 
     def get_valid_setting(self, directive, section=None):
         """
-        Return the valid value of specified directive.
+        Return the active parsed setting of the specified directive. It is the last parsed value
+        and for most directives it is also the active setting.
 
         Parameters:
             directive (str): The directive to look for.
@@ -131,25 +171,14 @@ class HttpdConfAll(object):
 
         Returns:
             (tuple): ('the value of the directive', 'the configuration file') if directive exists,
-                     else None
-        """
-        if section:
-            parsed_data = self.data.get(section, {}).get(directive)
-            return (parsed_data.value, parsed_data.file_name) if parsed_data is not None else None
-        parsed_data = self.data.get(directive)
-        return (parsed_data.value, parsed_data.file_name) if parsed_data is not None else None
+                     else None.
 
-    def get_valid_setting_full(self, directive, section=None):
+        Note:
+            This method is deprecated and should be removed in the future. Use
+            ``get_active_setting`` instead. The word 'valid' in the method name is misleading.
         """
-        Return the valid parsed data of specified directive as a named tuple with .
-
-        Parameters:
-            directive (str): The directive to look for.
-            section (str): The section if the directive belongs to one.
-
-        Returns:
-            (namedtuple): Named tuple ParsedData.
-        """
-        if section:
-            return self.data.get(section, {}).get(directive)
-        return self.data.get(directive)
+        valid_setting = self.get_active_setting(directive, section)
+        if valid_setting is None:
+            return None
+        else:
+            return valid_setting.value, valid_setting.file_name
