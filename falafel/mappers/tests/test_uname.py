@@ -8,6 +8,7 @@ UNAME1 = "Linux ceehadoop1.gsslab.rdu2.redhat.com 2.6.32-504.el6.x86_64 #1 SMP T
 UNAME2 = "Linux rhel7box 3.10.0-229.el7.x86_64 #1 SMP Mon Mar 3 13:32:45 EST 2014 x86_64 x86_64 x86_64 GNU/Linux"
 UNAME3 = "Linux map1a 2.6.18-53.el5PAE #1 SMP Wed Oct 10 16:48:18 EDT 2007 i686 i686 i386 GNU/Linux"
 UNAME4 = "Linux cvlvtsmsrv01 3.10.0-229.el7.x86_64 #1 SMP Thu Jan 29 18:37:38 EST 2015 x86_64 x86_64 x86_64 GNU/Linux"
+UNAME5 = "Linux cvlvtsmsrv01 2.6.32-504.8.2.bgq.el6.x86_64 #1 SMP Thu Jan 29 18:37:38 EST 2015 x86_64 x86_64 x86_64 GNU/Linux"
 UNAME_RT_1 = "Linux localhost.localdomain 2.6.24.7-101.el5rt.x86_64 #1 SMP PREEMPT RT Thu Oct 29 21:54:23 EDT 2015 x86_64 x86_64 x86_64 GNU/Linux"
 UNAME_RT_1pre = "Linux localhost.localdomain 2.6.24.6-101.el5rt.x86_64 #1 SMP PREEMPT RT Thu Oct 29 21:54:23 EDT 2015 x86_64 x86_64 x86_64 GNU/Linux"
 UNAME_RT_1pre2 = "Linux localhost.localdomain 2.6.24-101.el5.x86_64 #1 SMP PREEMPT RT Thu Oct 29 21:54:23 EDT 2015 x86_64 x86_64 x86_64 GNU/Linux"
@@ -41,6 +42,7 @@ class TestUname(unittest.TestCase):
         uname2 = uname.Uname(context_wrap(UNAME2))
         uname3 = uname.Uname(context_wrap(UNAME3))
         uname4 = uname.Uname(context_wrap(UNAME4))
+        uname5 = uname.Uname(context_wrap(UNAME5))
 
         # Test all the properties
         self.assertEqual(uname1.arch, 'x86_64')
@@ -60,7 +62,7 @@ class TestUname(unittest.TestCase):
         self.assertEqual(uname1.rhel_release, ['6', '6'])
         self.assertEqual(uname1.ver_rel, '2.6.32-504.el6')
         self.assertEqual(uname1.version, '2.6.32')
-        self.assertEqual(uname1._lv_release, LooseVersion('504.0.0.el6'))
+        self.assertEqual(uname1._lv_release, LooseVersion('504.0.0.0.el6'))
         self.assertEqual(uname1._lv_version, LooseVersion('2.6.32'))
         self.assertEqual(uname1._rel_maj, '504')
         self.assertEqual(uname1._sv_version, StrictVersion('2.6.32'))
@@ -74,8 +76,8 @@ class TestUname(unittest.TestCase):
         self.assertLessEqual(uname1, uname4)
 
         # String and repr tests
-        self.assertEqual(str(uname1), 'version: 2.6.32; release: 504.el6; rel_maj: 504; lv_release: 504.0.0.el6')
-        self.assertEqual(repr(uname1), "<Uname 'version: 2.6.32; release: 504.el6; rel_maj: 504; lv_release: 504.0.0.el6'>")
+        self.assertEqual(str(uname1), 'version: 2.6.32; release: 504.el6; rel_maj: 504; lv_release: 504.0.0.0.el6')
+        self.assertEqual(repr(uname1), "<Uname 'version: 2.6.32; release: 504.el6; rel_maj: 504; lv_release: 504.0.0.0.el6'>")
 
         # Initialisation from just the kernel package VRA
         uname_abbr = uname.Uname(context_wrap(UNAME_ABBREVIATED))
@@ -94,7 +96,7 @@ class TestUname(unittest.TestCase):
         self.assertEqual(nvr['version'], 'quodge')
         self.assertIsNone(nvr['_sv_version'])
         self.assertEqual(nvr['_lv_version'], 'quodge')
-        self.assertEqual(nvr['_lv_release'], '327.204.0.el7')
+        self.assertEqual(nvr['_lv_release'], '327.204.0.0.el7')
 
         kernel1 = uname1  # 2.6.32-504.el6.x86_64
         self.assertEqual([], kernel1.fixed_by('2.6.32-220.1.el6', '2.6.32-504.el6'))
@@ -103,6 +105,10 @@ class TestUname(unittest.TestCase):
         self.assertEqual(['2.6.33-100.el6'], kernel1.fixed_by('2.6.33-100.el6'))
         self.assertEqual(['2.6.32-600.el6'], kernel1.fixed_by('2.6.32-220.1.el6', '2.6.32-600.el6'))
         self.assertEqual(['2.6.32-504.1.el6'], kernel1.fixed_by('2.6.32-504.1.el6'))
+
+        # test that 5 sections in a RH-released kernel name are not a problem
+        kernel5 = uname5  # 2.6.32-504.8.2.bgq.el6.x86_64
+        self.assertEqual('2.6.32-504.8.2.bgq.el6', kernel5.ver_rel)
 
         # RT kernel tests
         uname_rt_1 = uname.Uname(context_wrap(UNAME_RT_1))
@@ -185,7 +191,7 @@ class TestUname(unittest.TestCase):
 
     def test_unknown_release(self):
         u = uname.Uname.from_kernel("2.6.23-504.23.3.el6.revertBZ1169225")
-        self.assertEquals("504.23.3.el6", u._lv_release)
+        self.assertEquals("504.23.3.0.el6", u._lv_release)
         fixed_by = u.fixed_by("2.6.18-128.39.1.el5", "2.6.18-238.40.1.el5", "2.6.18-308.13.1.el5", "2.6.18-348.el5")
         self.assertEquals([], fixed_by)
 
