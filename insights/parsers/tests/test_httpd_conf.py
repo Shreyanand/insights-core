@@ -49,9 +49,14 @@ IncludeOptional conf.d/*.conf
 EnableSendfile on
 '''.strip()
 
+HTTPD_CONF_MORE = '''
+UserDir disable
+UserDir enable bob
+'''.strip()
+
 HttpdConf.filters.extend([
     'SSLProtocol', 'NSSProtocol', 'RequestHeader', 'FcgidPassHeader'
-    '<IfModule worker.c>', '<IfModule prefork.c>', '</IfModule>', 'MaxClients'
+    '<IfModule worker.c>', '<IfModule prefork.c>', '</IfModule>', 'MaxClients', 'UserDir',
 ])
 
 
@@ -79,8 +84,8 @@ def test_get_httpd_conf_2():
     assert "MaxClients" not in result.data
     assert result.file_path == HTTPD_CONF_D_PATH
     assert result.file_name == "default.conf"
-    assert result.full_data["SSLProtocol"].value == '-ALL +SSLv3'
-    assert result.full_data["SSLProtocol"].line == 'SSLProtocol -ALL +SSLv3'
+    assert result.full_data["SSLProtocol"][-1].value == '-ALL +SSLv3'
+    assert result.full_data["SSLProtocol"][-1].line == 'SSLProtocol -ALL +SSLv3'
 
 
 def test_main_config_splitting():
@@ -91,9 +96,9 @@ def test_main_config_splitting():
     assert result.file_name == "httpd.conf"
     assert result.data['LogLevel'] == 'warn'
     assert result.data['EnableSendfile'] == 'on'
-    assert result.first_half['LogLevel'].value == 'warn'
-    assert result.first_half['LogLevel'].line == 'LogLevel warn'
-    assert result.second_half['EnableSendfile'].value == 'on'
+    assert result.first_half['LogLevel'][-1].value == 'warn'
+    assert result.first_half['LogLevel'][-1].line == 'LogLevel warn'
+    assert result.second_half['EnableSendfile'][-1].value == 'on'
 
 
 def test_main_config_no_splitting():
@@ -112,3 +117,15 @@ def test_main_config_no_main_config():
 
     assert result.first_half == {}
     assert result.second_half == {}
+
+
+def test_multiple_values_for_directive():
+    context = context_wrap(HTTPD_CONF_MORE, path=HTTPD_CONF_PATH)
+    result = HttpdConf(context)
+
+    assert result.file_path == HTTPD_CONF_PATH
+    assert result.file_name == "httpd.conf"
+    assert result.data['UserDir'] == 'enable bob'
+    assert len(result.full_data['UserDir']) == 2
+    assert result.full_data['UserDir'][0].value == 'disable'
+    assert result.full_data['UserDir'][1].value == 'enable bob'
