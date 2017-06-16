@@ -670,7 +670,6 @@ kind: List
 metadata: {}
 """.strip()
 
-
 OC_GET_PV = """
 apiVersion: v1
 items:
@@ -724,7 +723,6 @@ items:
 kind: List
 metadata: {}
 """.strip()
-
 
 OC_GET_PVC = """
 apiVersion: v1
@@ -780,6 +778,80 @@ items:
     phase: Bound
 kind: List
 metadata: {}
+""".strip()
+
+OC_GET_ENDPOINTS = """
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Endpoints
+  metadata:
+    creationTimestamp: 2017-06-15T05:53:47Z
+    name: gluster-cluster
+    namespace: default
+    resourceVersion: "35151"
+    selfLink: /api/v1/namespaces/default/endpoints/gluster-cluster
+    uid: ffaf2c59-518e-11e7-a93b-001a4a01010c
+  subsets:
+  - addresses:
+    - ip: 10.64.221.124
+    - ip: 10.64.221.126
+    ports:
+    - port: 1
+      protocol: TCP
+- apiVersion: v1
+  kind: Endpoints
+  metadata:
+    creationTimestamp: 2017-06-14T05:55:59Z
+    name: kubernetes
+    namespace: default
+    resourceVersion: "449"
+    selfLink: /api/v1/namespaces/default/endpoints/kubernetes
+    uid: 240884a8-50c6-11e7-aae8-001a4a01010c
+  subsets:
+  - addresses:
+    - ip: 10.66.219.113
+    ports:
+    - name: https
+      port: 8443
+      protocol: TCP
+    - name: dns-tcp
+      port: 8053
+      protocol: TCP
+    - name: dns
+      port: 8053
+      protocol: UDP
+- apiVersion: v1
+  kind: Endpoints
+  metadata:
+    creationTimestamp: 2017-06-14T07:32:51Z
+    labels:
+      app: registry-console
+      createdBy: registry-console-template
+      name: registry-console
+    name: registry-console
+    namespace: default
+    resourceVersion: "2858"
+    selfLink: /api/v1/namespaces/default/endpoints/registry-console
+    uid: ac78a94e-50d3-11e7-aae8-001a4a01010c
+  subsets:
+  - addresses:
+    - ip: 10.128.0.3
+      nodeName: node1.ose35.com
+      targetRef:
+        kind: Pod
+        name: registry-console-1-jckp2
+        namespace: default
+        resourceVersion: "2854"
+        uid: d5baeab5-50d3-11e7-aae8-001a4a01010c
+    ports:
+    - name: registry-console
+      port: 9090
+      protocol: TCP
+kind: List
+metadata: {}
+resourceVersion: ""
+selfLink: ""
 """.strip()
 
 
@@ -844,3 +916,10 @@ def test_oc_get_pvc_yml():
     assert result.data['items'][0]['kind'] == 'PersistentVolumeClaim'
     assert result.data['items'][0]['metadata']['name'] == 'registry-claim'
     assert result.get_pvc()['registry-claim-test1']['spec']['volumeName'] == 'registry-volume-zjj'
+
+
+def test_oc_get_endpoints_yml():
+    result = openshift_get.OcGetEndPonits(context_wrap(OC_GET_ENDPOINTS))
+    assert result.data['items'][0]['kind'] == 'Endpoints'
+    assert result.data['items'][0]['metadata']['name'] == 'gluster-cluster'
+    assert result.get_endpoints()['kubernetes']['subsets'][0]["addresses"][0]["ip"] == '10.66.219.113'
