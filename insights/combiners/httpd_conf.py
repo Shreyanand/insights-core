@@ -1,6 +1,6 @@
 """
 Combiner for httpd configurations
-=======================================
+=================================
 
 Combiner for parsing part of httpd configurations. It collects all
 HttpdConf generated from each httpd configuration files and get the valid
@@ -9,38 +9,61 @@ to get the valid value of specific directive.
 
 It also correctly handles position of ``IncludeOptional conf.d/*.conf`` line.
 
+Note: at this point in time, you should **NOT** filter the httpd configurations
+to avoid find "directives" from incorrect "Sections"
+
 Examples:
     >>> HTTPD_CONF_1 = '''
     ... # prefork MPM
     ... DocumentRoot "/var/www/html_cgi"
     ... <IfModule prefork.c>
-    ... ServerLimit      256
-    ... MaxClients       256
+    ... ServerLimit 256
+    ... ThreadsPerChild 16
+    ... MaxClients  256
     ... </IfModule>
     ... '''.strip()
     >>> HTTPD_CONF_2 = '''
     ... DocumentRoot "/var/www/html"
     ... # prefork MPM
     ... <IfModule prefork.c>
-    ... ServerLimit      512
-    ... MaxClients       512
+    ... ServerLimit 512
+    ... MaxClients  512
     ... </IfModule>
+    ... <VirtualHost 128.39.140.28>
+    ... <IfModule !php5_module>
+    ...     <IfModule !php4_module>
+    ...         <FilesMatch ".php[45]?$">
+    ...             Deny from all
+    ...         </FilesMatch>
+    ...     </IfModule>
+    ... </IfModule>
+    ... <IfModule mod_rewrite.c>
+    ...     RewriteEngine On
+    ... </IfModule>
+    ... <IfModule mod_rewrite.c>
+    ...     RewriteEngine Off
+    ... </IfModule>
+    ... </VirtualHost>
     ... '''.strip()
     >>> httpd1 = HttpdConf(context_wrap(HTTPD_CONF, path='/etc/httpd/conf/httpd.conf'))
     >>> httpd2 = HttpdConf(context_wrap(HTTPD_CONF, path='/etc/httpd/conf.d/00-z.conf'))
     >>> shared = [{HttpdConf: [httpd1, httpd2]}]
     >>> htd_conf = shared[HttpdConfAll]
-    >>> htd_conf.get_valid_setting("MaxClients", "MPM_prefork")
-    ('512', '00-z.conf')
-    >>> htd_conf.get_valid_setting("DocumentRoot")
-    ('/var/www/html', '00-z.conf')
-    >>> htd_conf.get_valid_setting_full("DocumentRoot")
-    ParsedData('/var/www/html', 'DocumentRoot "/var/www/html"', '00-z.conf', '/etc/httpd/conf.d/00-z.conf')
+    >>> htd_conf.get_active_setting("ThreadsPerChild", ("IfModule", "prefork.c"))[0].value
+    '16'
+    >>> htd_conf.get_active_setting("MaxClients", ("IfModule", "prefork"))[0]
+    ParsedData(value='512', line='MaxClients  512', section='IfModule', section_name='prefork.c', file_name='00-z.conf', file_path='/etc/httpd/conf.d/00-z.conf')
+    >>> htd_conf.get_active_setting("DocumentRoot").value
+    '/var/www/html'
+    >>> htd_conf.get_active_setting("RewriteEngine", ('IfModule', 'mod_rewrite.c'))[-1].value
+    'Off'
+    >>> htd_conf.get_active_setting('Deny', section=('FilesMatch','".php[45]?$"'))[-1].value
+    'from all'
 """
 from collections import namedtuple
 
 from insights.core.plugins import combiner
-from insights.parsers.httpd_conf import HttpdConf
+from insights.parsers.httpd_conf import HttpdConf, dict_deep_merge
 
 
 @combiner(requires=[HttpdConf])
@@ -54,13 +77,15 @@ class HttpdConfAll(object):
         ``ParsedData`` is a named tuple with the following properties:
             - ``value`` - the value of the option.
             - ``line`` - the complete line as found in the config file.
+            - ``section`` - the section type that the option belongs to.
+            - ``section_name`` - the section name that the option belongs to.
             - ``file_name`` - the config file name.
             - ``file_path`` - the complete config file path.
 
         ``ConfigData`` is a named tuple with the following properties:
             - ``file_name`` - the config file name.
             - ``file_path`` - the complete config file path.
-            - ``data_dict`` - original full_data dictionary from parser.
+            - ``data_dict`` - original data dictionary from parser.
 
     Attributes:
         data (dict): Dictionary of parsed settings in format {option: [ParsedData, ParsedData]}.
@@ -69,7 +94,6 @@ class HttpdConfAll(object):
                      such as ``UserDir``, are used.
         config_data (list): List of parsed config files in containing ConfigData named tuples.
     """
-    ParsedData = namedtuple('ParsedData', ['value', 'line', 'file_name', 'file_path'])
     ConfigData = namedtuple('ConfigData', ['file_name', 'file_path', 'full_data_dict'])
 
     def __init__(self, local, shared):
@@ -88,7 +112,7 @@ class HttpdConfAll(object):
 
             if not main_config:
                 config_files_data.append(self.ConfigData(file_name, file_path,
-                                                         httpd_parser.full_data))
+                                                         httpd_parser.data))
             else:
                 main_config_data.append(self.ConfigData(file_name, file_path,
                                                         httpd_parser.first_half))
@@ -107,78 +131,113 @@ class HttpdConfAll(object):
             self.config_data = config_files_data
 
         # Store active settings - the last parsed value us stored
-        for file_name, file_path, full_data in self.config_data:
-            for option, parsed_data in full_data.iteritems():
+        self.data = {}
+        for _, _, full_data in self.config_data:
+            copy_data = full_data.copy()
+            for option, parsed_data in copy_data.items():
                 if isinstance(parsed_data, dict):
-                    # For section
-                    section = option
-                    content = parsed_data
-                    if section not in self.data:
-                        self.data[section] = {}
-
-                    for k, pd in content.iteritems():
-                        values = [self.ParsedData(a.value, a.line, file_name, file_path)
-                                  for a in pd]
-                        self.data[section][k] = values
+                    if option not in self.data:
+                        self.data[option] = {}
+                    dict_deep_merge(self.data[option], parsed_data)
                 else:
-                    # For directive
-                    values = [self.ParsedData(a.value, a.line, file_name, file_path)
-                              for a in parsed_data]
-                    self.data[option] = values
+                    if option not in self.data:
+                        self.data[option] = []
+                    self.data[option].extend(parsed_data)
 
     def get_setting_list(self, directive, section=None):
+        """
+        Returns the parsed data of the specified directive as a list
+
+        Parameters:
+            directive (str): The directive to look for
+            section (str or tuple): The section the directive belongs to
+
+                    - str: The section type, e.g. "IfModule"
+                    - tuple(section, section_name): e.g. ("IfModule", "prefork")
+
+                    Note::
+                        `section_name` can be ignored or can be a part of the actual name.
+
+        Returns:
+            (list of dict or named tuple `ParsedData`):
+                When `section` is not None, returns the list of dict that wraps
+                the section and the directive's named tuples ParsedData, in
+                order how they are parsed.
+
+                When `section` is None, returns the list of named tuples
+                ParsedData, in order how they are parsed.
+
+                If directive or section does not exist, returns empty list.
+        """
+        def _deep_search(data, dr, sc):
+            """
+            Utility function to get search the directive `dr` in the nested
+            dict
+
+            Parameters:
+                data (dict): The target dictionary
+                dr (str): The directive to look for
+                sc (tuple): The section the directive belongs to
+
+            Returns:
+                (list of dict): List of dict that wraps the section and the
+                    directive's named tuples ParsedData in order how they are parsed.
+            """
+            result = []
+            for d, v in data.items():
+                if isinstance(d, tuple):
+                    if d[0] == sc[0] and sc[1] in d[1]:
+                        val = v.get(dr)
+                        if val:
+                            result.append({d: val})
+                    else:
+                        result.extend(_deep_search(v, dr, sc))
+            return result
+
+        if section:
+            if isinstance(section, str):
+                section = (section, '')
+            elif isinstance(section, tuple) and len(section) == 1:
+                section = (section[0], '')
+            elif (not isinstance(section, tuple) or
+                     (len(section) == 0 or len(section) > 2)):
+                return []
+            return _deep_search(self.data, directive, section)
+
+        return self.data.get(directive, [])
+
+    def get_active_setting(self, directive, section=None):
         """
         Returns the parsed data of the specified directive as a list of named tuples.
 
         Parameters:
-            directive (str): The directive to look for.
-            section (str): The section if the directive belongs to one.
+            directive (str): The directive to look for
+            section (str or tuple): The section the directive belongs to
+
+                    - str: The section type, e.g. "IfModule"
+                    - tuple(section, section_name): e.g. ("IfModule", "prefork")
+
+                    Note::
+                        `section_name` can be ignored or can be a part of the actual name.
 
         Returns:
-            (list): List of named tuples ParsedData, in order how they are parsed. If directive
-                    does not exist, it returns None.
-        """
-        if section:
-            return self.data.get(section, {}).get(directive)
-        return self.data.get(directive)
+            (list or named tuple `ParsedData`):
+                When `section` is not None, returns the list of named tuples
+                ParsedData, in order how they are parsed.
+                If directive or section does not exist, returns empty list.
 
-    def get_active_setting(self, directive, section=None):
-        """
-        Return the active parsed setting of the specified directive as a named tuple. It is the
-        last parsed value and for most directives it is also the active setting.
+                When `sectoin` is None, returns the named tuple ParsedData of
+                the directive directly.
+                If directive or section does not exist, returns None.
 
-        Parameters:
-            directive (str): The directive to look for.
-            section (str): The section if the directive belongs to one.
-
-        Returns:
-            (namedtuple): Named tuple ParsedData if directive exists, else None.
         """
         values_list = self.get_setting_list(directive, section)
-        if values_list is None:
-            return None
+        if section is not None:
+            if values_list:
+                for i, val in enumerate(values_list):
+                    values_list[i] = val.values()[0][-1]
+                return values_list
+            return []
         else:
-            return values_list[-1]
-
-    def get_valid_setting(self, directive, section=None):
-        """
-        Return the active parsed setting of the specified directive. It is the last parsed value
-        and for most directives it is also the active setting.
-
-        Parameters:
-            directive (str): The directive to look for.
-            section (str): The section if the directive belongs to one.
-
-        Returns:
-            (tuple): ('the value of the directive', 'the configuration file') if directive exists,
-                     else None.
-
-        Note:
-            This method is deprecated and should be removed in the future. Use
-            ``get_active_setting`` instead. The word 'valid' in the method name is misleading.
-        """
-        valid_setting = self.get_active_setting(directive, section)
-        if valid_setting is None:
-            return None
-        else:
-            return valid_setting.value, valid_setting.file_name
+            if values_list:
+                return values_list[-1]

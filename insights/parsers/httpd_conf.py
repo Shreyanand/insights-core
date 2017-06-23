@@ -6,19 +6,7 @@ Parse the keyword-and-value-but-also-vaguely-XML of an Apache configuration
 file.
 
 Generally, each line is split on the first space into key and value, leading
-and trailing space being ignored.  If the 'IfModule' declaration is found,
-then the data in this section (i.e. up to the '</IfModule' line) is stored
-under the 'MPM_prefork' key if the IfModule declaration contains 'prefork.c',
-or the 'MPM_worker' key if the IfModule declaration contains 'worker.c'; if
-neither is found the data in this IfModule is stored as if the IfModule
-declaration did not exist.
-
-**NB**: at this point in time, this does **not** attempt to provide any
-semblance of structure to the configuration file.  It is really just a
-simple key-value dictionary parser, with a basic understanding of the IfModule
-declaration for how Apache handles multiple requests.  In particular, you
-**must** add filters to this parser to find the lines you want, because lines
-in this module are filtered.
+and trailing space being ignored.
 
 Sample (edited) httpd.conf file::
 
@@ -67,19 +55,21 @@ Sample (edited) httpd.conf file::
 Examples:
 
     >>> httpconf = shared[HttpdConf]
-    >>> httpconf.data['ServerRoot'] # Quotes are not removed
+    >>> httpconf['ServerRoot'][-1].value # Quotes are not removed
     '"/etc/httpd"'
-    >>> httpconf.data['LoadModule'] # Later declarations overwrite earlier
+    >>> httpconf['LoadModule'][0].value
+    'auth_basic_module modules/mod_auth_basic.so'
+    >>> httpconf['LoadModule'][-1].value
     'auth_digest_module modules/mod_auth_digest.so'
-    >>> httpconf.data['Options'] # Sections are currently ignored
+    >>> httpconf['Directory', '/']['Options'][-1].value
     'FollowSymLinks'
-    >>> type(httpconf.data['MPM_prefork'])
+    >>> type(httpconf[('IfModule','prefork.c')])
     <type 'dict'>
-    >>> httpconf.data['MPM_prefork']['StartServers'] # No type conversion
+    >>> httpconf[('IfModule','prefork.c')]['StartServers'] # No type conversion
     '8'
-    >>> 'ThreadsPerChild' in httpconf.data['MPM_prefork']
+    >>> 'ThreadsPerChild' in httpconf[('IfModule','prefork.c')]
     False
-    >>> httpconf.data['MPM_worker']['MaxRequestsPerChild']
+    >>> httpconf[('IfModule','prefork.c')]['MaxRequestsPerChild'][-1].value
     '0'
 
 """
@@ -88,40 +78,36 @@ from collections import namedtuple
 import re
 from .. import Parser, parser, get_active_lines, LegacyItemAccess
 
+ParsedData = namedtuple('ParsedData', ['value', 'line', 'section', 'section_name', 'file_name', 'file_path'])
+"""namedtuple: Type for storing the parsed httpd configuration's directive information."""
 
-@parser('httpd.conf', filters=['IncludeOptional'])
+
+@parser('httpd.conf')
 @parser('httpd.conf.d')
 class HttpdConf(LegacyItemAccess, Parser):
     """
     Get the key value pairs separated on the first space, ignoring leading
-    and trailing spaces.  The "<IfModule prefork.c>" and "<IfModule worker.c>"
-    sections are parsed into 'MPM_prefork' and 'MPM_worker' sub-dictionaries
-    respectively.
+    and trailing spaces.
 
     If the file is ``httpd.conf``, it also stores first half, before
     ``IncludeOptional conf.d/*.conf`` line, and the rest, to the ``first_half``
     and ``second_half`` attributes respectively.
 
     Attributes:
-        data (dict): Dictionary of parsed data in format of {option: value} or
-                     {section: {option: value}}. Stores last found value.
-        full_data (dict): Dictionary of parsed data with key being the option and value a list of
-                          named tuples with the following properties:
-                          - ``value`` - the value of the keyword.
-                          - ``line`` - the complete line as found in the config file.
-                          The reason why it is a list is to store data for directives which can use
-                          selective overriding such as ``UserDir``.
+        data (dict): Dictionary of parsed data with key being the option and value a list of
+                     named tuples with the following properties:
+                     - ``value`` - the value of the keyword.
+                     - ``line`` - the complete line as found in the config file.
+                     The reason why it is a list is to store data for directives which can use
+                     selective overriding such as ``UserDir``.
         first_half (dict): Parsed data from main config file before inclusion of other files in the
-                           same format as ``full_data``.
+                           same format as ``data``.
         second_half (dict): Parsed data from main config file after inclusion of other files in the
-                            same format as ``full_data``.
+                            same format as ``data``.
     """
-
-    ParsedData = namedtuple('ParsedData', ['value', 'line'])
 
     def __init__(self, *args, **kwargs):
         self.data = {}
-        self.full_data = {}
         self.first_half = {}
         self.second_half = {}
         super(HttpdConf, self).__init__(*args, **kwargs)
@@ -150,39 +136,71 @@ class HttpdConf(LegacyItemAccess, Parser):
         # Flag to be used for different parsing of the main config file
         main_config = self.file_name == 'httpd.conf'
 
-        section = None
+        section = []  # Can be treated as a stack
         for line in get_active_lines(content):
             if main_config and where_to_store is not self.second_half:
                 # Dividing line looks like 'IncludeOptional conf.d/*.conf'
                 if re.search(r'^\s*IncludeOptional\s+conf\.d', line):
                     where_to_store = self.second_half
 
-            # new IfModule section start
-            if line.startswith('<IfModule'):
-                section = "MPM_{}".format(line.split()[-1].split('.')[0].lower())
-            # section end
-            elif line.startswith('</IfModule'):
-                section = None
+            # new section start
+            if line.startswith('<') and not line.startswith('</'):
+                typ, name = line.strip('<>').split(None, 1)
+                section.append(((typ, name), {}))
+            # one section end
+            elif line.startswith('</'):
+                sec, pd = section.pop()
+                # for nested section
+                if section:
+                    if sec not in section[-1][-1]:
+                        section[-1][-1][sec] = {}
+                    dict_deep_merge(section[-1][-1][sec], pd)
+                else:
+                    if sec not in self.data:
+                        self.data[sec] = {}
+                        if main_config:
+                            where_to_store[sec] = {}
+                    dict_deep_merge(self.data[sec], pd)
+                    if main_config:
+                        dict_deep_merge(where_to_store[sec], pd)
             else:
                 try:
                     option, value = [s.strip() for s in line.split(None, 1)]
                 except ValueError:
                     continue  # Skip lines which are not 'Option Value'
+
                 value = value.strip('\'"')
-                parsed_data = self.ParsedData(value, line)
 
                 if section:
-                    if section not in self.data:
-                        self.data[section] = {}
-                        self.full_data[section] = {}
-                        if main_config:
-                            where_to_store[section] = {}
-                    self.data[section][option] = value
-                    add_to_dict_list(self.full_data[section], option, parsed_data)
-                    if main_config:
-                        add_to_dict_list(where_to_store[section], option, parsed_data)
+                    cur_sec = section[-1][0]
+                    parsed_data = ParsedData(value, line, cur_sec[0], cur_sec[1], self.file_name, self.file_path)
+                    # before: section = [(('IfModule', 'worker.c'), {})]
+                    add_to_dict_list(section[-1][-1], option, parsed_data)
+                    # after:  section = [(('IfModule', 'worker.c'), [{'MaxClients': (256, 'MaxClients 256')}])]
                 else:
-                    self.data[option] = value
-                    add_to_dict_list(self.full_data, option, parsed_data)
+                    parsed_data = ParsedData(value, line, None, None, self.file_name, self.file_path)
+                    add_to_dict_list(self.data, option, parsed_data)
                     if main_config:
                         add_to_dict_list(where_to_store, option, parsed_data)
+
+
+def dict_deep_merge(tgt, src):
+    """
+    Utility function to merge the source dictionary `src` to the target
+    dictionary recursively
+
+    Note:
+        The type of the values in the dictionary can only be `dict` or `list`
+
+    Parameters:
+        tgt (dict): The target dictionary
+        src (dict): The source dictionary
+    """
+    for k, v in src.items():
+        if k in tgt:
+            if isinstance(tgt[k], dict) and isinstance(v, dict):
+                dict_deep_merge(tgt[k], v)
+            else:
+                tgt[k].extend(v)
+        else:
+            tgt[k] = v
