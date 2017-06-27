@@ -27,10 +27,20 @@ UNAME_RT_3post2 = "Linux localhost.localdomain 3.10.1-327.204.el7.x86_64 #1 SMP 
 
 UNAME_CVE_2016_0728_1 = 'Linux hostname.example.com 3.10.0-229.1.2.rt56.141.2.el7_1.x86_64 #1 SMP Fri Dec 19 12:09:25 EST 2014 x86_64 x86_64 x86_64 GNU/Linux'
 
-UNAME_ABBREVIATED = '3.10.1-327.204.el7.x86_64'
+UNAME_BLANK_LINE = """
+Linux qqhrycsq2 2.6.32-279.el6.x86_64 #1 SMP Wed Jun 13 18:24:36 EDT 2012 x86_64 x86_64 x86_64 GNU/Linux
+
+""".strip()
+
+UNAME_FOREMAN_DEBUG = """
+COMMAND> uname -a
+Linux qqhrycsq2 2.6.32-279.el6.x86_64 #1 SMP Wed Jun 13 18:24:36 EDT 2012 x86_64 x86_64 x86_64 GNU/Linux
+""".strip()
 
 UNAME_ERROR_BLANK = ""
 UNAME_ERROR_TOO_SHORT = "Linux localhost.localdomain"
+UNAME_ERROR_TOO_SHORT2 = "Linux 2.6.32-279.el6.x86_64"
+UNAME_ERROR_TOO_SHORT3 = "2.6.32-279.el6.x86_64"
 UNAME_ERROR_ABBR_BAD_NVR = 'Linux bad-nvr 2'
 UNAME_ERROR_TOO_MANY_REL_PARTS = 'Linux bad-parts 3.10.1.4.16-327.204.108.59.11.el7.x86_64'
 
@@ -43,6 +53,8 @@ class TestUname(unittest.TestCase):
         uname3 = uname.Uname(context_wrap(UNAME3))
         uname4 = uname.Uname(context_wrap(UNAME4))
         uname5 = uname.Uname(context_wrap(UNAME5))
+        uname6 = uname.Uname(context_wrap(UNAME_BLANK_LINE))
+        uname7 = uname.Uname(context_wrap(UNAME_FOREMAN_DEBUG))
 
         # Test all the properties
         self.assertEqual(uname1.arch, 'x86_64')
@@ -79,12 +91,6 @@ class TestUname(unittest.TestCase):
         self.assertEqual(str(uname1), 'version: 2.6.32; release: 504.el6; rel_maj: 504; lv_release: 504.0.0.0.el6')
         self.assertEqual(repr(uname1), "<Uname 'version: 2.6.32; release: 504.el6; rel_maj: 504; lv_release: 504.0.0.0.el6'>")
 
-        # Initialisation from just the kernel package VRA
-        uname_abbr = uname.Uname(context_wrap(UNAME_ABBREVIATED))
-        self.assertEqual(uname_abbr.kernel, '3.10.1-327.204.el7.x86_64')
-        self.assertEqual(uname_abbr.version, '3.10.1')
-        self.assertEqual(uname_abbr.arch, 'x86_64')
-
         # Just a release
         uname_from_release = uname.Uname.from_release('7.2')
         self.assertEqual(uname_from_release.version, '3.10.0')
@@ -109,6 +115,18 @@ class TestUname(unittest.TestCase):
         # test that 5 sections in a RH-released kernel name are not a problem
         kernel5 = uname5  # 2.6.32-504.8.2.bgq.el6.x86_64
         self.assertEqual('2.6.32-504.8.2.bgq.el6', kernel5.ver_rel)
+
+        self.assertEqual(uname6._sv_version, StrictVersion('2.6.32'))
+        self.assertEqual(uname6.arch, 'x86_64')
+        self.assertEqual(uname6.hw_platform, 'x86_64')
+        self.assertEqual(uname6.kernel, '2.6.32-279.el6.x86_64')
+        self.assertEqual(uname6.kernel_date, 'Wed Jun 13 18:24:36 EDT 2012')
+
+        self.assertEqual(uname7._sv_version, StrictVersion('2.6.32'))
+        self.assertEqual(uname7.arch, 'x86_64')
+        self.assertEqual(uname7.hw_platform, 'x86_64')
+        self.assertEqual(uname7.kernel, '2.6.32-279.el6.x86_64')
+        self.assertEqual(uname7.kernel_date, 'Wed Jun 13 18:24:36 EDT 2012')
 
         # RT kernel tests
         uname_rt_1 = uname.Uname(context_wrap(UNAME_RT_1))
@@ -163,6 +181,12 @@ class TestUname(unittest.TestCase):
         with self.assertRaisesRegexp(uname.UnameError, "Uname string appears invalid"):
             un = uname.Uname(context_wrap(UNAME_ERROR_TOO_SHORT))
             self.assertIsNone(un)
+        with self.assertRaisesRegexp(uname.UnameError, "Uname string appears invalid"):
+            un = uname.Uname(context_wrap(UNAME_ERROR_TOO_SHORT2))
+            self.assertIsNone(un)
+        with self.assertRaisesRegexp(uname.UnameError, "Uname string appears invalid"):
+            un = uname.Uname(context_wrap(UNAME_ERROR_TOO_SHORT3))
+            self.assertIsNone(un)
         with self.assertRaisesRegexp(uname.UnameError, "Too few parts in the uname version-release"):
             un = uname.Uname(context_wrap(UNAME_ERROR_ABBR_BAD_NVR))
             self.assertIsNone(un)
@@ -181,7 +205,7 @@ class TestUname(unittest.TestCase):
         self.assertRaises(ValueError, uname.pad_release, '390.11.12.13.el6')
 
     def test_fixed_by(self):
-        u = uname.Uname.from_uname_str("2.6.32-504.el6")
+        u = uname.Uname.from_uname_str("Linux qqhrycsq2 2.6.32-504.el6.x86_64 #1 SMP Wed Jun 13 18:24:36 EDT 2012 x86_64 x86_64 x86_64 GNU/Linux")
         self.assertEquals([], u.fixed_by('2.6.32-220.1.el6', '2.6.32-504.el6'))
         self.assertEquals(['2.6.32-600.el6'], u.fixed_by('2.6.32-600.el6'))
         self.assertEquals([], u.fixed_by('2.6.32-600.el6', introduced_in='2.6.32-504.1.el6'))
