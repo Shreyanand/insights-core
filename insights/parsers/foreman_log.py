@@ -16,7 +16,21 @@ from .. import LogFileOutput, parser
 @parser('foreman_proxy.log')
 class ProxyLog(LogFileOutput):
     """Class for parsing ``foreman-proxy/proxy.log`` file."""
-    pass
+    def get_after(self, timestamp, lines=None):
+        """
+        Get a list of lines after the given time stamp.
+
+        Parameters:
+            timestamp(datetime.datetime): log lines after this time are
+                returned.
+            lines(list): the list of log lines to search (e.g. from a get).
+                If not supplied, all available lines are searched.
+
+        Returns:
+            (list): The list of log lines with time stamps after the given
+            date and time.
+        """
+        return super(ProxyLog, self).get_after(timestamp, lines, '%d/%b/%Y %H:%M:%S')
 
 
 @parser('foreman_satellite.log')
