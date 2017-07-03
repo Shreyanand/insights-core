@@ -860,6 +860,7 @@ def test_oc_get_pod_yml():
     assert result.data['items'][0]['metadata']['annotations']['openshift.io/scc'] == 'anyuid'
     assert result.data['items'][0]['metadata']['creationTimestamp'] == datetime.datetime(2017, 2, 10, 16, 33, 46)
     assert result.data['items'][0]['spec']['host'] == 'node2.ose.com'
+    assert result.get("items")[0]['spec']['host'] == 'node2.ose.com'
     assert result.get_pod()["router-1-1-w27o2"]["metadata"]["labels"]["deploymentconfig"] == "router-1"
 
 
@@ -872,6 +873,7 @@ def test_oc_get_service_yml():
     assert result.data['items'][1]['spec']['ports'][0]['port'] == 80
     assert result.data['kind'] == 'List'
     assert result.data['metadata'] == {}
+    assert result.get("items")[0]['spec']['clusterIP'] == '172.30.0.1'
     assert "zjj-project" in result.data['items'][1]['metadata']['namespace']
     assert result.get_service()["router-1"]["metadata"]["resourceVersion"] == "1638401"
 
@@ -880,6 +882,7 @@ def test_oc_get_dc_yml():
     result = openshift_get.OcGetDc(context_wrap(OC_GET_DC))
     assert result.data['items'][0]['kind'] == 'DeploymentConfig'
     assert result.data['items'][0]['metadata']['generation'] == 3
+    assert result.get("items")[0]['metadata']['generation'] == 3
     assert result.get_dc()["router-1"]["metadata"]["namespace"] == "zjj-project"
 
 
@@ -887,6 +890,7 @@ def test_oc_get_rolebinding_yml():
     result = openshift_get.OcGetRolebinding(context_wrap(OC_GET_ROLEBINDING))
     assert result.data['items'][0]['kind'] == 'RoleBinding'
     assert result.data['items'][0]['metadata']['resourceVersion'] == "11803596"
+    assert result.get("items")[0]['metadata']['resourceVersion'] == "11803596"
     assert result.get_rolebind()["myrole"]["roleRef"]["namespace"] == "foo"
 
 
@@ -894,6 +898,7 @@ def test_oc_get_project_yml():
     result = openshift_get.OcGetProject(context_wrap(OC_GET_PROJECT))
     assert result.data['items'][0]['kind'] == 'Project'
     assert result.data['items'][0]['metadata']['resourceVersion'] == "11040756"
+    assert result.get('items')[0]['metadata']['resourceVersion'] == "11040756"
     assert result.get_project()["test"]["status"]["phase"] == "Active"
 
 
@@ -901,6 +906,7 @@ def test_oc_get_role_yml():
     result = openshift_get.OcGetRole(context_wrap(OC_GET_ROLE))
     assert result.data['items'][0]['kind'] == 'Role'
     assert result.data['items'][0]['metadata']['resourceVersion'] == "94"
+    assert result.get('items')[0]['metadata']['resourceVersion'] == "94"
     assert result.get_role()["shared-resource-viewer"]["metadata"]["uid"] == "a10c3f88-6ecc-11e6-83c6-001a4a0101f0"
 
 
@@ -908,6 +914,7 @@ def test_oc_get_pv_yml():
     result = openshift_get.OcGetPv(context_wrap(OC_GET_PV))
     assert result.data['items'][0]['kind'] == 'PersistentVolume'
     assert result.data['items'][0]['metadata']['name'] == 'registry-volume'
+    assert result.get('items')[0]['metadata']['name'] == 'registry-volume'
     assert result.get_pv()['registry-volume-zjj']['spec']['capacity']['storage'] == '10Gi'
 
 
@@ -915,6 +922,7 @@ def test_oc_get_pvc_yml():
     result = openshift_get.OcGetPvc(context_wrap(OC_GET_PVC))
     assert result.data['items'][0]['kind'] == 'PersistentVolumeClaim'
     assert result.data['items'][0]['metadata']['name'] == 'registry-claim'
+    assert result.get('items')[0]['metadata']['name'] == 'registry-claim'
     assert result.get_pvc()['registry-claim-test1']['spec']['volumeName'] == 'registry-volume-zjj'
 
 
@@ -922,4 +930,5 @@ def test_oc_get_endpoints_yml():
     result = openshift_get.OcGetEndPonits(context_wrap(OC_GET_ENDPOINTS))
     assert result.data['items'][0]['kind'] == 'Endpoints'
     assert result.data['items'][0]['metadata']['name'] == 'gluster-cluster'
+    assert result.get('items')[0]['metadata']['name'] == 'gluster-cluster'
     assert result.get_endpoints()['kubernetes']['subsets'][0]["addresses"][0]["ip"] == '10.66.219.113'
