@@ -1,3 +1,4 @@
+from insights.config.factory import add_filter
 from insights.parsers.httpd_conf import HttpdConf
 from insights.tests import context_wrap
 
@@ -136,6 +137,12 @@ def test_get_httpd_conf_nest_2():
             'JustATest': [('on', 'JustATest on', 'IfModule', '!php5_module', 'httpd.conf', 'etc/httpd/conf/httpd.conf')],
 
     }
+
+
+add_filter('httpd.conf', [
+    'SSLProtocol', 'NSSProtocol', 'RequestHeader', 'FcgidPassHeader'
+    '<IfModule worker.c>', '<IfModule prefork.c>', '</IfModule>', 'MaxClients', 'UserDir',
+])
 
 
 def test_get_httpd_conf_1():

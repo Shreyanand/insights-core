@@ -96,7 +96,7 @@ class HttpdConfAll(object):
     """
     ConfigData = namedtuple('ConfigData', ['file_name', 'file_path', 'full_data_dict'])
 
-    def __init__(self, local, shared):
+    def __init__(self, shared):
         self.data = {}
         self.config_data = []
 

@@ -167,7 +167,7 @@ def test_active_httpd_nest():
     httpd1 = HttpdConf(context_wrap(HTTPD_CONF_NEST_1, path='/etc/httpd/conf/httpd.conf'))
     httpd2 = HttpdConf(context_wrap(HTTPD_CONF_NEST_2, path='/etc/httpd/conf.d/00-z.conf'))
     shared = {HttpdConf: [httpd1, httpd2]}
-    result = HttpdConfAll(None, shared)
+    result = HttpdConfAll(shared)
     assert result.get_setting_list('Order1', ('FilesMatch', 'php')) == []
     assert result.get_setting_list('Order', ('FilesMatch', 'pdf')) == []
     assert result.get_setting_list('Order', section=('FilesMatch', 'php')) == [
@@ -224,7 +224,8 @@ def test_active_httpd():
     httpd2 = HttpdConf(context_wrap(HTTPD_CONF_2, path='/etc/httpd/conf.d/00-z.conf'))
     httpd3 = HttpdConf(context_wrap(HTTPD_CONF_3, path='/etc/httpd/conf.d/z-z.conf'))
     shared = {HttpdConf: [httpd1, httpd2, httpd3]}
-    result = HttpdConfAll(None, shared)
+
+    result = HttpdConfAll(shared)
     assert result.get_active_setting('MaxClients', section=('IfModule', 'prefork.c'))[0].value == '512'
     assert result.get_active_setting('MaxClients', section=('IfModule', 'prefork.c'))[0].file_path == '/etc/httpd/conf.d/z-z.conf'
     assert result.get_active_setting('ThreadsPerChild', section=('IfModule',
@@ -243,7 +244,7 @@ def test_httpd_splits():
     httpd2 = HttpdConf(context_wrap(HTTPD_CONF_FILE_1, path='/etc/httpd/conf.d/00-a.conf'))
     httpd3 = HttpdConf(context_wrap(HTTPD_CONF_FILE_2, path='/etc/httpd/conf.d/01-b.conf'))
     shared = {HttpdConf: [httpd1, httpd2, httpd3]}
-    result = HttpdConfAll(None, shared)
+    result = HttpdConfAll(shared)
     assert result.get_active_setting('ServerRoot').value == '/home/skontar/www'
     assert result.get_active_setting('ServerRoot').line == 'ServerRoot "/home/skontar/www"'
     assert result.get_active_setting('ServerRoot').file_name == '01-b.conf'
@@ -257,7 +258,8 @@ def test_httpd_splits():
     httpd2 = HttpdConf(context_wrap(HTTPD_CONF_FILE_1, path='/etc/httpd/conf.d/00-a.conf'))
     httpd3 = HttpdConf(context_wrap(HTTPD_CONF_FILE_2, path='/etc/httpd/conf.d/01-b.conf'))
     shared = {HttpdConf: [httpd1, httpd2, httpd3]}
-    result = HttpdConfAll(None, shared)
+
+    result = HttpdConfAll(shared)
     assert result.get_active_setting('ServerRoot').value == '/etc/httpd'
     assert result.get_active_setting('ServerRoot').line == 'ServerRoot "/etc/httpd"'
     assert result.get_active_setting('ServerRoot').file_name == 'httpd.conf'
@@ -271,7 +273,8 @@ def test_httpd_splits():
     httpd2 = HttpdConf(context_wrap(HTTPD_CONF_FILE_1, path='/etc/httpd/conf.d/00-a.conf'))
     httpd3 = HttpdConf(context_wrap(HTTPD_CONF_FILE_2, path='/etc/httpd/conf.d/01-b.conf'))
     shared = {HttpdConf: [httpd1, httpd2, httpd3]}
-    result = HttpdConfAll(None, shared)
+
+    result = HttpdConfAll(shared)
     assert result.get_active_setting('ServerRoot').value == '/home/skontar/www'
     assert result.get_active_setting('ServerRoot').line == 'ServerRoot "/home/skontar/www"'
     assert result.get_active_setting('ServerRoot').file_name == '01-b.conf'
@@ -293,14 +296,14 @@ def test_httpd_no_main_config():
     httpd2 = HttpdConf(context_wrap(HTTPD_CONF_FILE_1, path='/etc/httpd/conf.d/00-a.conf'))
     httpd3 = HttpdConf(context_wrap(HTTPD_CONF_FILE_2, path='/etc/httpd/conf.d/01-b.conf'))
     shared = {HttpdConf: [httpd2, httpd3]}
-    result = HttpdConfAll(None, shared)
+    result = HttpdConfAll(shared)
     assert [a.file_name for a in result.config_data] == ['00-a.conf', '01-b.conf']
 
 
 def test_httpd_one_file_overwrites():
     httpd = HttpdConf(context_wrap(HTTPD_CONF_MORE, path='/etc/httpd/conf/httpd.conf'))
     shared = {HttpdConf: [httpd]}
-    result = HttpdConfAll(None, shared)
+    result = HttpdConfAll(shared)
 
     active_setting = result.get_active_setting('UserDir')
     assert active_setting.value == 'enable bob'
