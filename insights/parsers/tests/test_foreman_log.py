@@ -2,6 +2,7 @@ from insights.tests import context_wrap
 from insights.parsers.foreman_log import SatelliteLog, ProductionLog
 from insights.parsers.foreman_log import CandlepinLog, ProxyLog
 
+from datetime import datetime
 
 PRODUCTION_LOG = """
 2015-11-13 03:30:07 [I] Completed 200 OK in 1783ms (Views: 0.2ms | ActiveRecord: 172.9ms)
@@ -118,11 +119,11 @@ SATELLITE_OUT = """
 [DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Candlepin/Exec[create candlepin qpid exchange]/notify: subscribes to Exec[import CA into Candlepin truststore]
 [DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Candlepin/Exec[import CA into Candlepin truststore]/notify: subscribes to Exec[import client certificate into Candlepin keystore]
 [DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Candlepin/Exec[import client certificate into Candlepin keystore]/notify: subscribes to File[/etc/candlepin/certs/amqp/candlepin.jks]
-[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Certs::Candlepin/File[/etc/candlepin/certs/amqp/candlepin.jks]/notify: subscribes to Service[tomcat]
-[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Candlepin/notify: subscribes to Class[Qpid]
-[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Candlepin::Install/notify: subscribes to Class[Candlepin::Config]
-[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Candlepin::Config/notify: subscribes to Class[Candlepin::Database]
-[DEBUG 2016-08-11 13:09:49 main]  /Stage[main]/Candlepin::Database/notify: subscribes to Class[Candlepin::Service]
+[DEBUG 2016-08-11 13:09:50 main]  /Stage[main]/Certs::Candlepin/File[/etc/candlepin/certs/amqp/candlepin.jks]/notify: subscribes to Service[tomcat]
+[DEBUG 2016-08-11 13:09:50 main]  /Stage[main]/Candlepin/notify: subscribes to Class[Qpid]
+[DEBUG 2016-08-11 13:09:51 main]  /Stage[main]/Candlepin::Install/notify: subscribes to Class[Candlepin::Config]
+[DEBUG 2016-08-11 13:09:51 main]  /Stage[main]/Candlepin::Config/notify: subscribes to Class[Candlepin::Database]
+[DEBUG 2016-08-11 13:09:52 main]  /Stage[main]/Candlepin::Database/notify: subscribes to Class[Candlepin::Service]
 """.strip()
 
 CANDLEPIN_LOG = """
@@ -139,7 +140,7 @@ PROXY_LOG = """
 127.0.0.1 - - [31/May/2016:09:42:38 -0400] "GET /puppet/environments/KT_Encore_Library_RHEL_7_6/classes HTTP/1.1" 200 76785 4.4754
 127.0.0.1 - - [31/May/2016:09:42:49 -0400] "GET /puppet/environments/KT_Encore_Library_RHEL6_8/classes HTTP/1.1" 200 76785 4.5776
 127.0.0.1 - - [31/May/2016:09:57:34 -0400] "GET /tftp/serverName HTTP/1.1" 200 38 0.0014
-E, [2016-05-31T09:57:34.884636 #4494] ERROR -- : Record 172.16.100.0/172.16.100.17 not found ]
+E, [2016-05-31T09:57:35.884636 #4494] ERROR -- : Record 172.16.100.0/172.16.100.17 not found ]
 """.strip()
 
 
@@ -149,21 +150,28 @@ def test_production_log():
     assert "Expired 48 Reports" in fm_log
     assert fm_log.get("Completed 200 OK in 93")[0] == \
         "2015-11-13 09:41:58 [I] Completed 200 OK in 93ms (Views: 2.9ms | ActiveRecord: 0.3ms)"
+    assert len(list(fm_log.get_after(datetime(2015, 11, 13, 9, 41, 58)))) == 7
 
 
 def test_proxy_log():
     px_log = ProxyLog(context_wrap(PROXY_LOG))
     assert "ERROR -- " in px_log
     assert len(px_log.get("KT_Encore_Library_RHEL")) == 3
+    # Test selection by both time formats - regular line format
+    assert len(list(px_log.get_after(datetime(2016, 5, 31, 9, 45, 0)))) == 2
+    # ... and error format
+    assert len(list(px_log.get_after(datetime(2016, 5, 31, 9, 57, 35)))) == 1
 
 
 def test_candlepin_log():
     cp_log = CandlepinLog(context_wrap(CANDLEPIN_LOG))
     assert "req=49becd26-5dfe-4d2f-8667-470519230d88" in cp_log
     assert len(cp_log.get("req=bd5a4284-d280-4fc5-a3d5-fc976b7aa5cc")) == 2
+    assert len(list(cp_log.get_after(datetime(2016, 9, 9, 13, 45, 53)))) == 2
 
 
 def test_satellite_log():
     sat_log = SatelliteLog(context_wrap(SATELLITE_OUT))
     assert "subscribes to Class[Qpid]" in sat_log
     assert len(sat_log.get("notify: subscribes to Class[")) == 7
+    assert len(list(sat_log.get_after(datetime(2016, 8, 11, 13, 9, 50)))) == 5

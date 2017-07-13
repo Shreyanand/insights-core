@@ -16,7 +16,10 @@ from .. import LogFileOutput, parser
 @parser('foreman_proxy.log')
 class ProxyLog(LogFileOutput):
     """Class for parsing ``foreman-proxy/proxy.log`` file."""
-    time_format = '%d/%b/%Y %H:%M:%S'
+    time_format = {
+        'standard': '%d/%b/%Y:%H:%M:%S',  # 31/May/2016:09:57:34
+        'error': '%Y-%m-%dT%H:%M:%S.%f'  # 2016-05-31T09:57:35.884636
+    }
 
 
 @parser('foreman_satellite.log')
