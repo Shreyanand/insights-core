@@ -1,8 +1,6 @@
 from insights.parsers.cib import CIB
 from insights.tests import context_wrap
 
-import unittest
-
 CIB_CONFIG = """
     <cib crm_feature_set="3.0.9" validate-with="pacemaker-2.3" have-quorum="1" dc-uuid="4">
       <configuration>
@@ -30,9 +28,7 @@ CIB_CONFIG = """
 """
 
 
-class TestCIB(unittest.TestCase):
-
-    def test_cib(self):
-        cib = CIB(context_wrap(CIB_CONFIG))
-        self.assertTrue(cib)
-        self.assertEqual(cib.nodes, ['odchw1', 'pyatt', 'ford'])
+def test_cib():
+    cib = CIB(context_wrap(CIB_CONFIG))
+    assert cib is not None
+    assert cib.nodes == ['odchw1', 'pyatt', 'ford']
