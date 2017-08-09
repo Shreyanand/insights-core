@@ -146,9 +146,9 @@ class NFSExportsBase(Parser):
         # utilize dict overrides.
         active_lines = get_active_lines(content)
         line_gen = (self._parse_line(l) for l in reversed(active_lines))
-        self.data = {path: hosts for path, hosts in line_gen}
+        self.data = dict((path, hosts) for path, hosts in line_gen)
         self.ignored_lines = list(self._find_ignored_lines(active_lines))
-        self.raw_lines = {l.split()[0]: l for l in active_lines}
+        self.raw_lines = dict(l.split(()[0], l) for l in active_lines)
 
     @staticmethod
     def _find_ignored_lines(lines):
