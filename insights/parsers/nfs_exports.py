@@ -194,13 +194,13 @@ class NFSExportsBase(Parser):
                          for host, options in d.iteritems()])
 
 
-@parser('nfs_exports', ['no_root_squash'])
+@parser('nfs_exports')
 class NFSExports(NFSExportsBase):
     """Subclass to attach ``nfs_exports`` spec to"""
     pass
 
 
-@parser('nfs_exports.d', ['no_root_squash'])
+@parser('nfs_exports.d')
 class NFSExportsD(NFSExportsBase):
     """Subclass to attach ``nfs_exports.d`` spec to"""
     pass
