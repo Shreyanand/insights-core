@@ -109,7 +109,8 @@ Examples:
 """
 
 from itertools import chain
-from .. import add_filter, Parser, parser
+
+from .. import Parser, parser
 from . import get_active_lines
 
 
@@ -192,10 +193,6 @@ class NFSExportsBase(Parser):
         """
         return "  ".join([path] + ["%s(%s)" % (host, ",".join(options))
                          for host, options in d.iteritems()])
-
-
-add_filter('nfs_exports', ['no_root_squash'])
-add_filter('nfs_exports.d', ['no_root_squash'])
 
 
 @parser('nfs_exports')
