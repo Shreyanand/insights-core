@@ -5,7 +5,7 @@ RHNConf - file ``/etc/rhn/rhn.conf``
 """
 
 from insights import Parser, parser, LegacyItemAccess
-from insights.parsers import get_active_lines
+from insights.parsers import get_active_lines, unsplit_lines
 
 
 @parser('rhn.conf')
@@ -54,20 +54,8 @@ class RHNConf(LegacyItemAccess, Parser):
     """
 
     def parse_content(self, content):
-        rhn = {}
-        is_multi = False
-        multi_lines_key = None
-        for line in get_active_lines(content):
-            if line.endswith(','):
-                line = line[:-1]
-                is_multi = True
-            else:
-                is_multi = False
-
+        self.data = {}
+        for line in unsplit_lines(get_active_lines(content), ',', keep_cont_char=True):
             if '=' in line:
                 k, v = [i.strip() for i in line.split('=', 1)]
-                multi_lines_key = k if is_multi else None
-                rhn[k] = [i.strip() for i in v.split(',')] if ',' in v else [v] if is_multi else v
-            elif multi_lines_key:
-                rhn[multi_lines_key].extend([i.strip() for i in line.split(',')] if ',' in line else [line])
-        self.data = rhn
+                self.data[k] = [i.strip() for i in v.split(',')] if ',' in v else v
