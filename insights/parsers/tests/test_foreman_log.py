@@ -1,8 +1,9 @@
 from insights.tests import context_wrap
 from insights.parsers.foreman_log import SatelliteLog, ProductionLog
 from insights.parsers.foreman_log import CandlepinLog, ProxyLog
-
+from insights.parsers.foreman_log import CandlepinErrorLog
 from datetime import datetime
+
 
 PRODUCTION_LOG = """
 2015-11-13 03:30:07 [I] Completed 200 OK in 1783ms (Views: 0.2ms | ActiveRecord: 172.9ms)
@@ -135,12 +136,26 @@ CANDLEPIN_LOG = """
 2016-09-09 13:45:53,115 [req=49becd26-5dfe-4d2f-8667-470519230d88, org=ING_Luxembourg_SA] INFO  org.candlepin.common.filter.LoggingFilter - Response: status=200, content-type="application/json", time=43
 """.strip()
 
+
 PROXY_LOG = """
 127.0.0.1 - - [31/May/2016:09:42:28 -0400] "GET /puppet/environments/KT_Encore_Library_RHEL_6_5/classes HTTP/1.1" 200 76785 6.1205
 127.0.0.1 - - [31/May/2016:09:42:38 -0400] "GET /puppet/environments/KT_Encore_Library_RHEL_7_6/classes HTTP/1.1" 200 76785 4.4754
 127.0.0.1 - - [31/May/2016:09:42:49 -0400] "GET /puppet/environments/KT_Encore_Library_RHEL6_8/classes HTTP/1.1" 200 76785 4.5776
 127.0.0.1 - - [31/May/2016:09:57:34 -0400] "GET /tftp/serverName HTTP/1.1" 200 38 0.0014
 E, [2016-05-31T09:57:35.884636 #4494] ERROR -- : Record 172.16.100.0/172.16.100.17 not found ]
+""".strip()
+
+
+CANDLEPIN_ERROR_LOG = """
+2016-09-07 13:56:49,001 [=, org=] WARN  org.apache.qpid.transport.network.security.ssl.SSLUtil - Exception received while trying to verify hostname
+2016-09-07 14:07:33,735 [=, org=] WARN  org.apache.qpid.transport.network.security.ssl.SSLUtil - Exception received while trying to verify hostname
+2016-09-07 14:09:55,173 [=, org=] WARN  org.apache.qpid.transport.network.security.ssl.SSLUtil - Exception received while trying to verify hostname
+2016-09-07 15:20:33,796 [=, org=] WARN  org.apache.qpid.transport.network.security.ssl.SSLUtil - Exception received while trying to verify hostname
+2016-09-07 15:27:34,367 [=, org=] WARN  org.apache.qpid.transport.network.security.ssl.SSLUtil - Exception received while trying to verify hostname
+2016-09-07 16:49:24,650 [=, org=] WARN  org.apache.qpid.transport.network.security.ssl.SSLUtil - Exception received while trying to verify hostname
+2016-09-07 18:07:53,688 [req=d9dc3cfd-abf7-485e-b1eb-e1e28e4b0f28, org=org_ray] ERROR org.candlepin.sync.Importer - Conflicts occurred during import that were not overridden:
+2016-09-07 18:07:53,690 [req=d9dc3cfd-abf7-485e-b1eb-e1e28e4b0f28, org=org_ray] ERROR org.candlepin.sync.Importer - [DISTRIBUTOR_CONFLICT]
+2016-09-07 18:07:53,711 [req=d9dc3cfd-abf7-485e-b1eb-e1e28e4b0f28, org=org_ray] ERROR org.candlepin.resource.OwnerResource - Recording import failure org.candlepin.sync.ImportConflictException: Owner has already imported from another subscription management application.
 """.strip()
 
 
@@ -175,3 +190,11 @@ def test_satellite_log():
     assert "subscribes to Class[Qpid]" in sat_log
     assert len(sat_log.get("notify: subscribes to Class[")) == 7
     assert len(list(sat_log.get_after(datetime(2016, 8, 11, 13, 9, 50)))) == 5
+
+
+def test_candlepin_error_log():
+    error_log = CandlepinErrorLog(context_wrap(CANDLEPIN_ERROR_LOG))
+    assert "req=d9dc3cfd-abf7-485e-b1eb-e1e28e4b0f28" in error_log
+    assert len(error_log.get("req=d9dc3cfd-abf7-485e-b1eb-e1e28e4b0f28")) == 3
+    assert len(list(error_log.get_after(datetime(2016, 9, 7, 18, 7, 53)))) == 3
+    assert len(list(error_log.get_after(datetime(2016, 9, 7, 16, 0, 0)))) == 4
