@@ -66,7 +66,7 @@ from insights.core.plugins import combiner
 from insights.parsers.httpd_conf import HttpdConf, dict_deep_merge
 
 
-@combiner(requires=[HttpdConf])
+@combiner(HttpdConf)
 class HttpdConfAll(object):
     """
     A combiner for parsing all httpd configurations. It parses all sources and makes a composition
@@ -96,14 +96,14 @@ class HttpdConfAll(object):
     """
     ConfigData = namedtuple('ConfigData', ['file_name', 'file_path', 'full_data_dict'])
 
-    def __init__(self, shared):
+    def __init__(self, httpd_conf):
         self.data = {}
         self.config_data = []
 
         config_files_data = []
         main_config_data = []
 
-        for httpd_parser in shared[HttpdConf]:
+        for httpd_parser in httpd_conf:
             file_name = httpd_parser.file_name
             file_path = httpd_parser.file_path
 
