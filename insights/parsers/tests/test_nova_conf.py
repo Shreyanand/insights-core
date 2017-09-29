@@ -78,7 +78,6 @@ osp.role = "Compute"
 
 def test_nova_conf():
     result = nova_conf.NovaConf(context_wrap(nova_content, osp=osp))
-    print result
     assert result.get("DEFAULT", "notification_driver") == ""
     assert result.get("DEFAULT", "report_interval") == "10"
     assert result.get("DEFAULT", "novncproxy_host") == "fd00:4888:1000:f901::c1"
