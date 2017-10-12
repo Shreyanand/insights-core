@@ -65,3 +65,9 @@ def test_fstab():
 
     assert results.mounted_on['/hdfs/data1'] == sdb1
     assert results.mounted_on['/srv/rdu/cases/000'] == nfs_host
+
+    # Test keyword searches - from examples
+    assert results.search(fs_file='/') == [l for l in results if l.fs_file == '/']
+    assert results.search(fs_spec__startswith='LABEL=') == [l for l in results if l.fs_spec.startswith('LABEL')]
+    assert results.search(fs_mntops__contains='uid') == [l for l in results if 'uid' in l.fs_mntops]
+    assert results.search(fs_vfstype='xfs', fs_mntops__contains='relatime') == [l for l in results if l.fs_vfstype == 'xfs' and 'relatime' in l.fs_mntops]
