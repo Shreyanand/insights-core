@@ -10,6 +10,7 @@ def test_hostname():
     assert data.fqdn == "rhel7.example.com"
     assert data.hostname == "rhel7"
     assert data.domain == "example.com"
+    assert "{}".format(data) == "<hostname: rhel7, domain: example.com>"
 
     data = Hostname(context_wrap(HOSTNAME_SHORT))
     assert data.fqdn == "rhel7"
