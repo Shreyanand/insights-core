@@ -76,19 +76,13 @@ Examples:
 from collections import namedtuple
 
 import re
-from .. import add_filter
 from .. import Parser, parser, get_active_lines, LegacyItemAccess
 
 ParsedData = namedtuple('ParsedData', ['value', 'line', 'section', 'section_name', 'file_name', 'file_path'])
 """namedtuple: Type for storing the parsed httpd configuration's directive information."""
 
 
-add_filter('httpd.conf', ['IncludeOptional'])
-
-
-# TODO: fix stacked decorator
-@parser('httpd.conf')
-@parser('httpd.conf.d')
+@parser('httpd_conf')
 class HttpdConf(LegacyItemAccess, Parser):
     """
     Get the key value pairs separated on the first space, ignoring leading
