@@ -1,8 +1,9 @@
 import xml.etree.ElementTree as ET
 from .. import Parser, parser, LegacyItemAccess
+from insights.specs import systemid
 
 
-@parser('systemid')
+@parser(systemid)
 class SystemID(LegacyItemAccess, Parser):
     '''
     ---------------

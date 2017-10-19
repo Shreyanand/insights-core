@@ -11,9 +11,14 @@ Note:
 """
 
 from .. import LogFileOutput, parser
+from insights.specs import candlepin_error_log
+from insights.specs import candlepin_log
+from insights.specs import foreman_production_log
+from insights.specs import foreman_proxy_log
+from insights.specs import foreman_satellite_log
 
 
-@parser('foreman_proxy.log')
+@parser(foreman_proxy_log)
 class ProxyLog(LogFileOutput):
     """Class for parsing ``foreman-proxy/proxy.log`` file."""
     time_format = {
@@ -22,25 +27,25 @@ class ProxyLog(LogFileOutput):
     }
 
 
-@parser('foreman_satellite.log')
+@parser(foreman_satellite_log)
 class SatelliteLog(LogFileOutput):
     """Class for parsing ``foreman-installer/satellite.log`` file."""
     pass
 
 
-@parser('foreman_production.log')
+@parser(foreman_production_log)
 class ProductionLog(LogFileOutput):
     """Class for parsing ``foreman/production.log`` file."""
     pass
 
 
-@parser('candlepin.log')
+@parser(candlepin_log)
 class CandlepinLog(LogFileOutput):
     """Class for parsing ``candlepin/candlepin.log`` file."""
     pass
 
 
-@parser('candlepin_error_log')
+@parser(candlepin_error_log)
 class CandlepinErrorLog(LogFileOutput):
     """
     Class for parsing ``candlepin/error.log`` file.
