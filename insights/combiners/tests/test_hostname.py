@@ -68,17 +68,15 @@ SYSTEMID_NO_PROFILE_NAME = '''
 
 def test_get_hostname():
     hn = Hostname(context_wrap(HOSTNAME))
-    shared = {Hostname: hn}
     expected = (HOSTNAME, HOSTNAME_SHORT, 'example.com')
-    result = hostname(shared)
+    result = hostname(hn, None, None)
     assert result.fqdn == expected[0]
     assert result.hostname == expected[1]
     assert result.domain == expected[2]
 
     hn = Hostname(context_wrap(HOSTNAME_SHORT))
-    shared = {Hostname: hn}
     expected = (HOSTNAME_SHORT, HOSTNAME_SHORT, '')
-    result = hostname(shared)
+    result = hostname(hn, None, None)
     assert result.fqdn == expected[0]
     assert result.hostname == expected[1]
     assert result.domain == expected[2]
@@ -86,9 +84,8 @@ def test_get_hostname():
 
 def test_get_facter_hostname():
     hn = Facter(context_wrap(FACTS_FQDN))
-    shared = {Facter: hn}
     expected = ('ewa-satellite.cs.boeing.com', 'ewa-satellite', 'cs.boeing.com')
-    result = hostname(shared)
+    result = hostname(None, hn, None)
     assert result.fqdn == expected[0]
     assert result.hostname == expected[1]
     assert result.domain == expected[2]
@@ -96,9 +93,8 @@ def test_get_facter_hostname():
 
 def test_get_systemid_hostname():
     hn = SystemID(context_wrap(SYSTEMID_PROFILE_NAME))
-    shared = {SystemID: hn}
     expected = ('usorla7hr0107x', 'usorla7hr0107x', '')
-    result = hostname(shared)
+    result = hostname(None, None, hn)
     assert result.fqdn == expected[0]
     assert result.hostname == expected[1]
     assert result.domain == expected[2]
@@ -108,9 +104,8 @@ def test_get_all_hostname():
     hn = Hostname(context_wrap(HOSTNAME))
     fhn = Facter(context_wrap(FACTS_FQDN))
     shn = SystemID(context_wrap(SYSTEMID_PROFILE_NAME))
-    shared = {Hostname: hn, Facter: fhn, SystemID: shn}
     expected = (HOSTNAME, HOSTNAME_SHORT, 'example.com')
-    result = hostname(shared)
+    result = hostname(hn, fhn, shn)
     assert result.fqdn == expected[0]
     assert result.hostname == expected[1]
     assert result.domain == expected[2]
@@ -118,6 +113,5 @@ def test_get_all_hostname():
 
 def test_hostname_raise():
     hn = Hostname(context_wrap(""))
-    shared = {Hostname: hn}
     with pytest.raises(Exception):
-        hostname(shared)
+        hostname(hn, None, None)

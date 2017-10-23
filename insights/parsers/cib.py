@@ -46,9 +46,10 @@ Examples:
 from .. import Parser, parser
 
 import xml.etree.ElementTree as ET
+from insights.specs import cib_xml
 
 
-@parser("cib.xml")
+@parser(cib_xml)
 class CIB(Parser):
     """
     Wraps a DOM of cib.xml
