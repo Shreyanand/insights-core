@@ -1,6 +1,6 @@
 """
-NFSExports - Content of ``/etc/exports`` and ``/etc/exports.d/*.exports``
-=========================================================================
+NFS exports configuration
+=========================
 
 NFSExports and NFSExportsD provide a parsed output of the content of an exports
 file as defined in ``man exports(5)``.  The content is parsed into a
@@ -16,6 +16,14 @@ to the ``ignored_lines`` member.
 
 All raw lines are kept in ``raw_lines``, which is a ``dict`` where the key is
 the export path and the value is the stripped raw line.
+
+Parsers included in this module are:
+
+NFSExports - file ``nfs_exports``
+---------------------------------
+
+NFSExportsD - files in the ``nfs_exports.d`` directory
+------------------------------------------------------
 
 Sample input is shown in the Examples.
 

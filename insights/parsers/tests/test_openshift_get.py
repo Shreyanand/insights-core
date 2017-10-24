@@ -927,7 +927,7 @@ def test_oc_get_pvc_yml():
 
 
 def test_oc_get_endpoints_yml():
-    result = openshift_get.OcGetEndPonits(context_wrap(OC_GET_ENDPOINTS))
+    result = openshift_get.OcGetEndPoints(context_wrap(OC_GET_ENDPOINTS))
     assert result.data['items'][0]['kind'] == 'Endpoints'
     assert result.data['items'][0]['metadata']['name'] == 'gluster-cluster'
     assert result.get('items')[0]['metadata']['name'] == 'gluster-cluster'

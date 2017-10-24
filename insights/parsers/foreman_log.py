@@ -1,12 +1,28 @@
 """
-foreman_log - Files /var/log/foreman...
-=======================================
-
+Foreman and Candlepin logs
+==========================
 
 Module for parsing the log files in foreman-debug archive
 
 Note:
-    Please refer to its super-class ``LogFileOutput``
+    Please refer to its super-class ``LogFileOutput`` for usage information.
+
+Parsers provided by this module:
+
+CandlepinErrorLog - file ``sos_commands/foreman/foreman-debug/var/log/candlepin/error.log``
+-------------------------------------------------------------------------------------------
+
+CandlepinLog - file ``/var/log/candlepin/candlepin.log``
+--------------------------------------------------------
+
+ProductionLog - file ``/var/log/foreman/production.log``
+--------------------------------------------------------
+
+ProxyLog - file ``/var/log/foreman-proxy/proxy.log``
+----------------------------------------------------
+
+SatelliteLog - file ``/var/log/foreman-installer/satellite.log``
+----------------------------------------------------------------
 
 """
 
