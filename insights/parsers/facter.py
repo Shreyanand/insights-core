@@ -1,6 +1,6 @@
 """
-facter - Command
-================
+Facter - command ``/usr/bin/facter``
+====================================
 
 Module for the parsing of output from the ``facter`` command.
 Data is avaliable as a dict for each line of the output.
