@@ -4,8 +4,9 @@ Foreman and Candlepin logs
 
 Module for parsing the log files in foreman-debug archive
 
-Note:
-    Please refer to its super-class ``LogFileOutput`` for usage information.
+.. note::
+    Please refer to its super-class :class:`insights.core.LogFileOutput` for
+    usage information.
 
 Parsers provided by this module:
 
@@ -81,18 +82,10 @@ class CandlepinErrorLog(LogFileOutput):
 
     Examples:
         >>> candlepin_log = shared[Candlepin_Error_Log]
-        >>> candlepin_log.get('req=d9dc3cfd-abf7-485e-b1eb-e1e28e4b0f28')
-        ['2016-09-07 18:07:53,688 [req=d9dc3cfd-abf7-485e-b1eb-e1e28e4b0f28, org=org_ray] ERROR org.candlepin.sync.Importer - Conflicts occurred during import that were
-        not overridden:', '2016-09-07 18:07:53,690 [req=d9dc3cfd-abf7-485e-b1eb-e1e28e4b0f28, org=org_ray] ERROR org.candlepin.sync.Importer - [DISTRIBUTOR_CONFLICT]',
-        '2016-09-07 18: 07:53,711 [req=d9dc3cfd-abf7-485e-b1eb-e1e28e4b0f28, org=org_ray] ERROR org.candlepin.resource.OwnerResource - Recording import failure
-        org.candlepin.sync.ImportConflit Exception: Owner has already imported from another subscription management application.']
+        >>> candlepin_log.get('req=d9dc3cfd-abf7-485e-b1eb-e1e28e4b0f28')[0]['raw_message']
+        '2016-09-07 18:07:53,688 [req=d9dc3cfd-abf7-485e-b1eb-e1e28e4b0f28, org=org_ray] ERROR org.candlepin.sync.Importer - Conflicts occurred during import that were'
 
-        >>> candlepin_log.get_after(datetime(2016, 9, 7, 16, 0, 0)
-        ['2016-09-07 16:49:24,650 [=, org=] WARN  org.apache.qpid.transport.network.security.ssl.SSLUtil - Exception received while trying to verify hostname',
-        '2016-09-07 18:7:53,688 [req=d9dc3cfd-abf7-485e-b1eb-e1e28e4b0f28, org=org_ray] ERROR org.candlepin.sync.Importer - Conflicts occurred during import that
-        were not overridden:', '2016-09-07 18:07:53,690 [req=d9dc3cfd-abf7-485e-b1eb-e1e28e4b0f28, org=org_ray] ERROR org.candlepin.sync.Importer - [DISTRIBUTOR_CONFLICT]',
-        '2016-09-07 18:07:53,711 [req=d9dc3cfd-abf7-485e-b1eb-e1e28e4b0f28, org=org_ray] ERROR org.candlepin.resource.OwnerResource - Recording import failure
-        org.candlepin.sync.ImportConflictException: Owner has already imported from another subscription management application.']
-
+        >>> candlepin_log.get_after(datetime(2016, 9, 7, 16, 0, 0)[0]['raw_message']
+        '2016-09-07 16:49:24,650 [=, org=] WARN  org.apache.qpid.transport.network.security.ssl.SSLUtil - Exception received while trying to verify hostname'
     """
     pass

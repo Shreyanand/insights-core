@@ -34,5 +34,8 @@ from insights.specs import cinder_volume_log
 class CinderVolumeLog(LogFileOutput):
     """
     Provide access to Cinder volume logs using the LogFileOutput parser class.
+
+    .. note::
+        Please refer to the super-class :class:`insights.core.LogFileOutput`
     """
     pass
