@@ -122,17 +122,10 @@ class AuditLog(LogFileOutput):
             (dict): the parsed data of lines with timestamps after this date in the
             same format they were supplied.
         """
-        if isinstance(s, str):
-            invalid_search_result = lambda l: s not in l  # noqa: E731
-        elif (isinstance(s, list) and len(s) > 0 and
-                    all(isinstance(w, str) for w in s)):
-            invalid_search_result = lambda l: any(w not in l for w in s)  # noqa: E731
-        elif s is not None:
-            raise TypeError('Search items must be given as a string or a list of strings')
-
+        search_by_expression = self._valid_search(s)
         for line in self.lines:
             # If `s` is not None, keywords must be found in the line
-            if s and invalid_search_result(line):
+            if s and not search_by_expression(line):
                 continue
             info = self._parse_line(line)
             try:
