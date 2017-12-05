@@ -310,6 +310,122 @@ kind: List
 metadata: {}
 """.strip()
 
+OC_GET_BC = """
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftWebConsole
+    creationTimestamp: 2017-11-28T09:02:19Z
+    labels:
+      app: tom
+    name: tom
+    namespace: ci
+    resourceVersion: "8922062"
+    selfLink: /oapi/v1/namespaces/ci/buildconfigs/tom
+    uid: d6a0364c-d41a-11e7-aef1-001a4a010222
+  spec:
+    nodeSelector: null
+    output:
+      to:
+        kind: ImageStreamTag
+        name: tom:latest
+    postCommit: {}
+    resources:
+      limits:
+        cpu: "1"
+        memory: 512m
+      requests:
+        cpu: 100m
+        memory: 256m
+    runPolicy: Serial
+    source:
+      contextDir: tomcat-websocket-chat
+      git:
+        ref: master
+        uri: https://github.com/jboss-openshift/openshift-quickstarts.git
+      type: Git
+    strategy:
+      sourceStrategy:
+        from:
+          kind: ImageStreamTag
+          name: jboss-webserver30-tomcat7-openshift:1.3
+          namespace: openshift
+      type: Source
+    triggers:
+    - generic:
+        secret: 222545c18370f300
+      type: Generic
+    - github:
+        secret: a75ac7b89f8afc22
+      type: GitHub
+    - imageChange:
+        lastTriggeredImageID: registry.access.redhat.com/jboss-webserver-3/webserver30-tomcat7-openshift@sha256:6ee8de68a744d820e249f784b5ba41d059f91a5554fce47c7e0b998aa88c97cb
+      type: ImageChange
+    - type: ConfigChange
+  status:
+    lastVersion: 2
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftWebConsole
+    creationTimestamp: 2017-11-28T09:05:26Z
+    labels:
+      app: mybank
+    name: mybank
+    namespace: mybank
+    resourceVersion: "8961033"
+    selfLink: /oapi/v1/namespaces/mybank/buildconfigs/mybank
+    uid: 46711668-d41b-11e7-aef1-001a4a010222
+  spec:
+    nodeSelector: null
+    output:
+      to:
+        kind: ImageStreamTag
+        name: mybank:latest
+    postCommit: {}
+    resources:
+      limits:
+        cpu: "1"
+        memory: 512m
+      requests:
+        cpu: 100m
+        memory: 256M
+    runPolicy: Serial
+    source:
+      git:
+        ref: master
+        uri: https://github.com/shzhou12/mybank-demo-maven
+      type: Git
+    strategy:
+      sourceStrategy:
+        from:
+          kind: ImageStreamTag
+          name: jboss-eap70-openshift:1.5
+          namespace: openshift
+      type: Source
+    triggers:
+    - generic:
+        secret: 3bf9b0f9eda5bcc3
+      type: Generic
+    - github:
+        secret: a1cea7fe7310d6df
+      type: GitHub
+    - imageChange:
+        lastTriggeredImageID: registry.access.redhat.com/jboss-eap-7/eap70-openshift@sha256:b1b664a9b6f797d530bf12c29123947c1feb4590336ecc9d118b3f2e44000524
+      type: ImageChange
+    - type: ConfigChange
+  status:
+    lastVersion: 11
+kind: List
+metadata: {}
+resourceVersion: ""
+selfLink: ""
+""".strip()
+
 OC_GET_DC = """
 apiVersion: v1
 items:
@@ -876,6 +992,14 @@ def test_oc_get_service_yml():
     assert result.get("items")[0]['spec']['clusterIP'] == '172.30.0.1'
     assert "zjj-project" in result.data['items'][1]['metadata']['namespace']
     assert result.get_service()["router-1"]["metadata"]["resourceVersion"] == "1638401"
+
+
+def test_oc_get_bc_yml():
+    result = openshift_get.OcGetBc(context_wrap(OC_GET_BC))
+    assert result['items'][0]['kind'] == 'BuildConfig'
+    assert result['items'][1]['metadata']['name'] == 'mybank'
+    assert result.get_bc()['mybank']['status']['lastVersion'] == 11
+    assert result.get_bc()['tom']['metadata']['namespace'] == 'ci'
 
 
 def test_oc_get_dc_yml():
