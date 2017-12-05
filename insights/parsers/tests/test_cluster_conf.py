@@ -1,4 +1,4 @@
-from insights.parsers import cluster_conf
+from insights.parsers.cluster_conf import ClusterConf
 from insights.tests import context_wrap
 
 CLUSTER_CONF_INFO = """
@@ -42,21 +42,5 @@ CLUSTER_CONF_INFO = """
 
 
 def test_cluster_conf():
-    context = context_wrap(CLUSTER_CONF_INFO)
-    result = cluster_conf.get_cluster_conf(context)
-    nodes = result["nodes"]
-    assert len(nodes) == 2
-    assert nodes[0]["name"] == "node-01.example.com"
-    fence = nodes[0]["fences"]
-    assert len(fence) == 2
-    method = fence[1]
-    assert len(method) == 2
-    assert method["meth_name"] == "SAN"
-    assert len(method["device"]) == 2
-    assert method["device"][0] == {"action": "on", "name": "sanswitch1", "port": "12"}
-    assert nodes[1]["nodeid"] == "2"
-
-    assert len(result["fencedevices"]) == 2
-    assert result["fencedevices"][0] == {"passwd": "***", "login": "opmgr", "ipaddr": "139.223.41.219", "name": "fence1", "agent": "fence_imm"}
-
-    assert result["resources"]["lvm"] == {"name": "lvm", "vg_name": "shared_vg", "lv_name": "ha-lv"}
+    conf = ClusterConf(context_wrap(CLUSTER_CONF_INFO))
+    assert any('clusternode' in line for line in conf.lines)
