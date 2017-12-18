@@ -73,20 +73,6 @@ Cannot connect to the Docker daemon. Is the docker daemon running on this host?
 """
 
 
-def test_docker_info_deprecated():
-    result = dockerinfo.docker_info_parser(context_wrap(docker_info1))
-    sub_key = ["Data loop file", "Server Version", "Data file"]
-    sub_result = dict([(key, result[key]) for key in sub_key])
-    expected = {'Data loop file': '/var/lib/docker/devicemapper/devicemapper/data', 'Data file': '/dev/loop0', 'Server Version': '1.9.1'}
-    assert expected == sub_result
-
-    result = dockerinfo.docker_info_parser(context_wrap(docker_info2))
-    assert result.get("Data loop file") is None
-
-    result = dockerinfo.docker_info_parser(context_wrap(docker_info3))
-    assert result == {}
-
-
 def test_docker_info():
     result = dockerinfo.DockerInfo(context_wrap(docker_info1)).data
     sub_key = ["Data loop file", "Server Version", "Data file"]
