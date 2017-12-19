@@ -4,6 +4,9 @@ from insights.tests import context_wrap
 
 from distutils.version import LooseVersion, StrictVersion
 
+import doctest
+
+
 UNAME1 = "Linux ceehadoop1.gsslab.rdu2.redhat.com 2.6.32-504.el6.x86_64 #1 SMP Tue Sep 16 01:56:35 EDT 2014 x86_64 x86_64 x86_64 GNU/Linux"
 UNAME2 = "Linux rhel7box 3.10.0-229.el7.x86_64 #1 SMP Mon Mar 3 13:32:45 EST 2014 x86_64 x86_64 x86_64 GNU/Linux"
 UNAME3 = "Linux map1a 2.6.18-53.el5PAE #1 SMP Wed Oct 10 16:48:18 EDT 2007 i686 i686 i386 GNU/Linux"
@@ -395,3 +398,17 @@ def test_uname_release_length_comparisons():
 def test_docker_uname():
     u = uname.Uname.from_uname_str("Linux 06a04d0354dc 4.0.3-boot2docker #1 SMP Wed May 13 20:54:49 UTC 2015 x86_64 x86_64 x86_64 GNU/Linux")
     assert "boot2docker" == u.release
+
+
+uname_line = 'Linux server1.example.com 2.6.32-504.el6.x86_64 #1 SMP Tue Sep 16 01:56:35 EDT 2014 x86_64 x86_64 x86_64 GNU/Linux'
+
+
+# Because tests are done at the module level, we have to put all the shared
+# parser information in the one environment.  Fortunately this is normal.
+def test_uname_doc_examples():
+    env = {
+        'Uname': uname.Uname,
+        'uname': uname.Uname(context_wrap(uname_line)),
+    }
+    failed, total = doctest.testmod(uname, globs=env)
+    assert failed == 0
