@@ -447,7 +447,7 @@ thp_use_zero_page = sf.simple_file("/sys/kernel/mm/transparent_hugepage/use_zero
 thp_enabled = sf.simple_file("/sys/kernel/mm/transparent_hugepage/enabled", name="thp_enabled")
 tmpfilesd = sf.glob_file(["/etc/tmpfiles.d/*.conf", "/usr/lib/tmpfiles.d/*.conf", "/run/tmpfiles.d/*.conf"], name="tmpfilesd")
 tomcat_web_xml = sf.first_of([sf.foreach(tomcat_base, "%s/conf/web.xml"),
-                              sf.glob_file("/conf/tomcat/tomcat*/web.xml")],
+                              sf.glob_file("/conf/tomcat/tomcat*/web.xml", context=HostArchiveContext)],
                              name="tomcat_web_xml", alias="tomcat_web.xml")
 
 
