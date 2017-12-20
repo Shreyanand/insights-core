@@ -34,6 +34,25 @@ branch_info = sf.simple_file("/branch_info", name="branch_info")
 brctl_show = sf.simple_command("/usr/sbin/brctl show", name="brctl_show")
 candlepin_log = sf.simple_file("/var/log/candlepin/candlepin.log", name="candlepin_log", alias="candlepin.log")
 candlepin_error_log = sf.first_of([sf.simple_command("/var/log/candlepin/error.log"), sf.simple_file(r"sos_commands/foreman/foreman-debug/var/log/candlepin/error.log", context=HostArchiveContext)], name="candlepin_error_log")
+ps_auxww = sf.first_of([
+    sf.simple_command("/bin/ps auxww", name="ps_auxww"),
+    sf.simple_file('sos_commands/process/ps_aux', alias='ps_aux', context=HostArchiveContext),
+    sf.simple_file('sos_commands/process/ps_auxwww', alias='ps_auxwww', context=HostArchiveContext),
+    sf.simple_file('sos_commands/process/ps_auxcww', alias='ps_auxcww', context=HostArchiveContext),
+])
+
+@datasource(ps_auxww)
+def tomcat_base(broker):
+    ps = broker[ps_auxww].content
+    results = []
+    findall = re.compile(r"\-Dcatalina\.base=(\S+)").findall
+    for p in ps:
+        found = findall(p)
+        if found:
+            # Only get the path which is absolute
+            results.extend(f for f in found if f[0] == '/')
+    return list(set(results))
+
 catalina_out = sf.glob_file(["/var/log/tomcat/catalina.out", "/var/log/tomcat6/catalina.out", "/tomcat-logs/tomcat/catalina.out", "/tomcat-logs/tomcat6/catalina.out"], name="catalina_out", alias="catalina.out")
 catalina_server_log = sf.glob_file(["/var/log/tomcat/logs/catalina*.log", "/var/log/tomcat6/logs/catalina*.log", "/tomcat-logs/tomcat/catalina*.log", "/tomcat-logs/tomcat6/catalina*.log"], name="catalina_server_log")
 cciss = sf.glob_file("/proc/driver/cciss/cciss*", name="cciss")
@@ -334,12 +353,6 @@ postgresql_log = sf.first_of([sf.glob_file("/var/lib/pgsql/data/pg_log/postgresq
 md5chk_files = sf.simple_command("/bin/ls -H /usr/lib*/{libfreeblpriv3.so,libsoftokn3.so} /etc/pki/product*/69.pem /etc/fonts/fonts.conf /dev/null 2>/dev/null", name="md5chk_files")
 prelink_orig_md5 = None
 prev_uploader_log = sf.simple_file("var/log/redhat-access-insights/redhat-access-insights.log.1", name="prev_uploader_log")
-ps_auxww = sf.first_of([
-    sf.simple_command("/bin/ps auxww", name="ps_auxww"),
-    sf.simple_file('sos_commands/process/ps_aux', alias='ps_aux', context=HostArchiveContext),
-    sf.simple_file('sos_commands/process/ps_auxwww', alias='ps_auxwww', context=HostArchiveContext),
-    sf.simple_file('sos_commands/process/ps_auxcww', alias='ps_auxcww', context=HostArchiveContext),
-])
 puppet_ssl_cert_ca_pem = None
 pvs = sf.simple_command('/sbin/pvs -a -v -o +pv_mda_free,pv_mda_size,pv_mda_count,pv_mda_used_count,pe_count --config="global{locking_type=0}"', name="pvs")
 pvs_noheadings = sf.simple_command("/sbin/pvs --nameprefixes --noheadings --separator='|' -a -o pv_all,vg_name --config=\"global{locking_type=0}\"", name="pvs_noheadings")
@@ -433,9 +446,9 @@ teamdctl_state_dump = sf.foreach(ethernet_interfaces, "/usr/bin/teamdctl %s stat
 thp_use_zero_page = sf.simple_file("/sys/kernel/mm/transparent_hugepage/use_zero_page", name="thp_use_zero_page")
 thp_enabled = sf.simple_file("/sys/kernel/mm/transparent_hugepage/enabled", name="thp_enabled")
 tmpfilesd = sf.glob_file(["/etc/tmpfiles.d/*.conf", "/usr/lib/tmpfiles.d/*.conf", "/run/tmpfiles.d/*.conf"], name="tmpfilesd")
-tomcat_web_xml = sf.first_of([sf.glob_file("/etc/tomcat*/web.xml", name="tomcat_web_xml_etc"),
-                              sf.glob_file("/conf/tomcat/tomcat*/web.xml", name="tomcat_web_xml_conf")],
-                              name="tomcat_web_xml", alias="tomcat_web.xml")
+tomcat_web_xml = sf.first_of([sf.foreach(tomcat_base, "%s/conf/web.xml"),
+                              sf.glob_file("/conf/tomcat/tomcat*/web.xml")],
+                             name="tomcat_web_xml", alias="tomcat_web.xml")
 
 
 @datasource(HostContext)
