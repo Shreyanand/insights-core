@@ -257,16 +257,12 @@ mlx4_port = sf.simple_command("/usr/bin/find /sys/bus/pci/devices/*/mlx4_port[0-
 module = sf.listdir("/sys/module", name="module")
 modinfo = sf.foreach(module, "/usr/sbin/modinfo %s", name="modinfo")
 modprobe_conf = sf.simple_file("/etc/modprobe.conf", name="modprobe_conf", alias="modprobe.conf")
-sysconfig_mongod = sf.glob_file(["/etc/sysconfig/mongod",
-                                 "/opt/rh/mongodb24/root/etc/sysconfig/mongodb",
-                                 "/etc/opt/rh/rh-mongodb*/sysconfig/mongod"],
-                                 name='sysconfig_mongod')
+modprobe_d = sf.glob_file("/etc/modprobe.d/*.conf", name="modprobe_d", alias="modprobe.d")
 mongod_conf = sf.glob_file(["/etc/mongod.conf",
                             "/etc/mongodb.conf",
                             "/opt/rh/mongodb24/root/etc/mongodb.conf",
                             "/etc/opt/rh/rh-mongodb*/mongod.conf"],
                             name='mongod_conf')
-modprobe_d = sf.glob_file("/etc/modprobe.d/*.conf", name="modprobe_d", alias="modprobe.d")
 mount = sf.simple_command("/bin/mount", name="mount")
 multicast_querier = sf.simple_command("/usr/bin/find /sys/devices/virtual/net/ -name multicast_querier -print -exec cat {} \;", name="multicast_querier")
 multipath_conf = sf.simple_file("/etc/multipath.conf", name="multipath_conf", alias="multipath.conf")
@@ -416,6 +412,10 @@ sysconfig_chronyd = sf.simple_file("/etc/sysconfig/chronyd", name="sysconfig_chr
 sysconfig_httpd = sf.simple_file("/etc/sysconfig/httpd", name="sysconfig_httpd")
 sysconfig_irqbalance = sf.simple_file("etc/sysconfig/irqbalance", name="sysconfig_irqbalance")
 sysconfig_kdump = sf.simple_file("etc/sysconfig/kdump", name="sysconfig_kdump")
+sysconfig_mongod = sf.glob_file(["/etc/sysconfig/mongod",
+                                 "/opt/rh/mongodb24/root/etc/sysconfig/mongodb",
+                                 "/etc/opt/rh/rh-mongodb*/sysconfig/mongod"],
+                                 name='sysconfig_mongod')
 sysconfig_ntpd = sf.simple_file("/etc/sysconfig/ntpd", name="sysconfig_ntpd")
 sysconfig_virt_who = sf.simple_file("/etc/sysconfig/virt-who", name="sysconfig_virt_who")
 sysctl = sf.simple_command("/sbin/sysctl -a", name="sysctl")
