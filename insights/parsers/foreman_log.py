@@ -33,6 +33,7 @@ from insights.specs import candlepin_log
 from insights.specs import foreman_production_log
 from insights.specs import foreman_proxy_log
 from insights.specs import foreman_satellite_log
+from insights.specs import foreman_ssl_access_ssl_log
 
 
 @parser(foreman_proxy_log)
@@ -89,3 +90,24 @@ class CandlepinErrorLog(LogFileOutput):
         '2016-09-07 16:49:24,650 [=, org=] WARN  org.apache.qpid.transport.network.security.ssl.SSLUtil - Exception received while trying to verify hostname'
     """
     pass
+
+
+@parser(foreman_ssl_access_ssl_log)
+class ForemanSSLAccessLog(LogFileOutput):
+    """Class for parsing ``var/log/httpd/foreman-ssl_access_ssl.log`` file.
+
+    Sample log contents::
+
+        10.181.73.211 - rhcapkdc.lmig.com [27/Mar/2017:13:34:52 -0400] "GET /rhsm/consumers/385e688f-43ad-41b2-9fc7-593942ddec78 HTTP/1.1" 200 10736 "-" "-"
+        10.181.73.211 - rhcapkdc.lmig.com [27/Mar/2017:13:34:52 -0400] "GET /rhsm/status HTTP/1.1" 200 263 "-" "-"
+        10.185.73.33 - 8a31cd915917666001591d6fb44602a7 [27/Mar/2017:13:34:52 -0400] "GET /pulp/repos/Liberty_Mutual_Holding_Company_Inc/Library/RHEL7_Sat_Cap        sule_Servers/content/dist/rhel/server/7/7Server/x86_64/os/repodata/repomd.xml HTTP/1.1" 200 2018 "-" "urlgrabber/3.10 yum/3.4.3"
+        10.181.73.211 - rhcapkdc.lmig.com [27/Mar/2017:13:34:52 -0400] "GET /rhsm/consumers/4f8a39d0-38b6-4663-8b7e-03368be4d3ab/owner HTTP/1.1" 200 5159 "-"
+        10.181.73.211 - rhcapkdc.lmig.com [27/Mar/2017:13:34:52 -0400] "GET /rhsm/consumers/385e688f-43ad-41b2-9fc7-593942ddec78/compliance HTTP/1.1" 200 5527
+        10.181.73.211 - rhcapkdc.lmig.com [27/Mar/2017:13:34:52 -0400] "GET /rhsm/consumers/4f8a39d0-38b6-4663-8b7e-03368be4d3ab HTTP/1.1" 200 10695 "-" "-"
+
+
+    Examples:
+        >>> foreman_ssl_acess_log = shared[ForemanSSLAccessLog]
+        >>> foreman_ssl_acess_log.get('req=d9dc3cfd-abf7-485e-b1eb-e1e28e4b0f28')
+    """
+    time_format = '%d/%b/%Y:%H:%M:%S'

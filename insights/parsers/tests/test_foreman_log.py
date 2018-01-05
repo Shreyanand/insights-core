@@ -2,6 +2,7 @@ from insights.tests import context_wrap
 from insights.parsers.foreman_log import SatelliteLog, ProductionLog
 from insights.parsers.foreman_log import CandlepinLog, ProxyLog
 from insights.parsers.foreman_log import CandlepinErrorLog
+from insights.parsers.foreman_log import ForemanSSLAccessLog
 from datetime import datetime
 
 
@@ -159,6 +160,17 @@ CANDLEPIN_ERROR_LOG = """
 """.strip()
 
 
+FOREMAN_SSL_ACCESS_SSL_LOG = """
+10.181.73.211 - rhcapkdc.lmig.com [27/Mar/2017:13:34:52 -0400] "GET /rhsm/consumers/385e688f-43ad-41b2-9fc7-593942ddec78 HTTP/1.1" 200 10736 "-" "-"
+10.181.73.211 - rhcapkdc.lmig.com [27/Mar/2017:13:34:52 -0400] "GET /rhsm/status HTTP/1.1" 200 263 "-" "-"
+10.185.73.33 - 8a31cd915917666001591d6fb44602a7 [27/Mar/2017:13:34:52 -0400] "GET /pulp/repos/Liberty_Mutual_Holding_Company_Inc/Library/RHEL7_Sat_Capsule_Servers/content/dist/rhel/server/7/7Server/x86_64/os/repodata/repomd.xml HTTP/1.1" 200 2018 "-" "urlgrabber/3.10 yum/3.4.3"
+10.181.73.211 - rhcapkdc.lmig.com [27/Mar/2017:13:34:52 -0400] "GET /rhsm/consumers/4f8a39d0-38b6-4663-8b7e-03368be4d3ab/owner HTTP/1.1" 200 5159 "-" "-"
+10.181.73.211 - rhcapkdc.lmig.com [27/Mar/2017:13:34:52 -0400] "GET /rhsm/consumers/385e688f-43ad-41b2-9fc7-593942ddec78/compliance HTTP/1.1" 200 5527 "-" "-"
+10.181.73.211 - rhcapkdc.lmig.com [27/Mar/2017:13:34:52 -0400] "GET /rhsm/consumers/4f8a39d0-38b6-4663-8b7e-03368be4d3ab HTTP/1.1" 200 10695 "-" "-"
+10.181.73.211 - rhcapkdc.lmig.com [27/Mar/2017:13:34:52 -0400] "GET /rhsm/consumers/385e688f-43ad-41b2-9fc7-593942ddec78/entitlements?exclude=certificates.key&exclude=certificates.cert HTTP/1.1" 200 9920 "-" "-"
+""".strip()
+
+
 def test_production_log():
     fm_log = ProductionLog(context_wrap(PRODUCTION_LOG))
     assert 2 == len(fm_log.get("Rendered text template"))
@@ -198,3 +210,11 @@ def test_candlepin_error_log():
     assert len(error_log.get("req=d9dc3cfd-abf7-485e-b1eb-e1e28e4b0f28")) == 3
     assert len(list(error_log.get_after(datetime(2016, 9, 7, 18, 7, 53)))) == 3
     assert len(list(error_log.get_after(datetime(2016, 9, 7, 16, 0, 0)))) == 4
+
+
+def test_foreman_ssl_access_ssl_log():
+    foreman_ssl_access_log = ForemanSSLAccessLog(context_wrap(FOREMAN_SSL_ACCESS_SSL_LOG))
+    assert "385e688f-43ad-41b2-9fc7-593942ddec78" in foreman_ssl_access_log
+    assert len(foreman_ssl_access_log.get("GET /rhsm/consumers")) == 5
+    assert len(foreman_ssl_access_log.get("385e688f-43ad-41b2-9fc7-593942ddec78")) == 3
+    assert len(list(foreman_ssl_access_log.get_after(datetime(2017, 3, 27, 13, 34, 0)))) == 7
