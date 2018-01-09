@@ -43,24 +43,20 @@ Examples:
 
 """
 
-from .. import Parser, parser
-
-import xml.etree.ElementTree as ET
+from .. import XMLParser, parser
 
 
 @parser("cib.xml")
-class CIB(Parser):
+class CIB(XMLParser):
     """
     Wraps a DOM of cib.xml
 
     self.dom is an instance of ElementTree.
     """
-    def parse_content(self, content):
-        self.dom = ET.fromstring("\n".join(content))
 
     @property
     def nodes(self):
         """
         Fetch the list of nodes and return their unames as a list.
         """
-        return [n.get("uname").lower() for n in self.dom.findall(".//nodes/node")]
+        return [n.get("uname").lower() for n in self.get_elements(".//nodes/node")]

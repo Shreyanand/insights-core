@@ -1,9 +1,10 @@
-import xml.etree.ElementTree as ET
-from .. import Parser, parser, LegacyItemAccess
+from .. import XMLParser, parser
 
 
 @parser('systemid')
-class SystemID(LegacyItemAccess, Parser):
+class SystemID(XMLParser):
+    """Class to parse file ``systemid``."""
+
     '''
     ---------------
     Return a SystemId object which contains a dict below:
@@ -79,14 +80,12 @@ class SystemID(LegacyItemAccess, Parser):
     </params>
     '''
 
-    def parse_content(self, content):
-        root = ET.fromstring('\n'.join(content))
+    def _parse_dom(self):
         systemid_info = {}
-
-        for member in root.findall(".//member"):
+        for member in self.dom.findall(".//member"):
             # ignore "fields" infos
             if member[0].text != 'fields':
                 key = member[0].text
                 value = member[1][0].text
                 systemid_info[key] = value
-        self.data = systemid_info
+        return systemid_info
