@@ -6,10 +6,10 @@ RHNConf - file ``/etc/rhn/rhn.conf``
 
 from insights import Parser, parser, LegacyItemAccess
 from insights.parsers import get_active_lines, unsplit_lines
-from insights.specs import rhn_conf
+from insights.specs import Specs
 
 
-@parser(rhn_conf)
+@parser(Specs.rhn_conf)
 class RHNConf(LegacyItemAccess, Parser):
     """
     Class to parse the configuration file ``rhn.conf``.

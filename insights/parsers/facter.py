@@ -33,10 +33,10 @@ Examples:
 """
 
 from .. import Parser, parser, LegacyItemAccess
-from insights.specs import facter
+from insights.specs import Specs
 
 
-@parser(facter)
+@parser(Specs.facter)
 class Facter(LegacyItemAccess, Parser):
     """Class for parsing ``facter`` command output.
 

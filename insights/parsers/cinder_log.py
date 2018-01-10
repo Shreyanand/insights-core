@@ -27,10 +27,10 @@ Examples:
 """
 
 from .. import LogFileOutput, parser
-from insights.specs import cinder_volume_log
+from insights.specs import Specs
 
 
-@parser(cinder_volume_log)
+@parser(Specs.cinder_volume_log)
 class CinderVolumeLog(LogFileOutput):
     """
     Provide access to Cinder volume logs using the LogFileOutput parser class.

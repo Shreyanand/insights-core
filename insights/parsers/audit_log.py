@@ -6,7 +6,7 @@ audit_log - File ``/var/log/audit/audit.log``
 import shlex
 from datetime import date
 from .. import LogFileOutput, parser, add_filter
-from insights.specs import audit_log
+from insights.specs import Specs
 
 # Currently, only selinux related(AVC type) audit logs are interested.
 # Add this filter in parser directly to filter out too many other types logs.
@@ -17,7 +17,7 @@ filter_list = [
 add_filter('audut.log', filter_list)
 
 
-@parser(audit_log)
+@parser(Specs.audit_log)
 class AuditLog(LogFileOutput):
     """
     Class for parsing ``/var/log/audit/audit.log`` file.

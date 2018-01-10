@@ -120,8 +120,7 @@ from itertools import chain
 
 from .. import Parser, parser
 from . import get_active_lines
-from insights.specs import nfs_exports
-from insights.specs import nfs_exports_d
+from insights.specs import Specs
 
 
 class NFSExportsBase(Parser):
@@ -205,13 +204,13 @@ class NFSExportsBase(Parser):
                          for host, options in d.iteritems()])
 
 
-@parser(nfs_exports)
+@parser(Specs.nfs_exports)
 class NFSExports(NFSExportsBase):
     """Subclass to attach ``nfs_exports`` spec to"""
     pass
 
 
-@parser(nfs_exports_d)
+@parser(Specs.nfs_exports_d)
 class NFSExportsD(NFSExportsBase):
     """Subclass to attach ``nfs_exports.d`` spec to"""
     pass

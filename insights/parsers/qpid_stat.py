@@ -1,9 +1,8 @@
 from .. import Parser, parser
-from insights.specs import qpid_stat_q
-from insights.specs import qpid_stat_u
+from insights.specs import Specs
 
 
-@parser(qpid_stat_q)
+@parser(Specs.qpid_stat_q)
 class QpidStatQ(Parser):
     """
     --- Sample ---
@@ -59,7 +58,7 @@ Queues
         self.data = qpid_list
 
 
-@parser(qpid_stat_u)
+@parser(Specs.qpid_stat_u)
 class QpidStatU(Parser):
 
     """

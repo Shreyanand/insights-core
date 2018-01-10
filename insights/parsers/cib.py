@@ -44,11 +44,10 @@ Examples:
 """
 
 from .. import XMLParser, parser
+from insights.specs import Specs
 
-from insights.specs import cib_xml
 
-
-@parser(cib_xml)
+@parser(Specs.cib_xml)
 class CIB(XMLParser):
     """
     Wraps a DOM of cib.xml

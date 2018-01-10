@@ -77,13 +77,13 @@ from collections import namedtuple
 
 import re
 from .. import Parser, parser, get_active_lines, LegacyItemAccess
-from insights.specs import httpd_conf
+from insights.specs import Specs
 
 ParsedData = namedtuple('ParsedData', ['value', 'line', 'section', 'section_name', 'file_name', 'file_path'])
 """namedtuple: Type for storing the parsed httpd configuration's directive information."""
 
 
-@parser(httpd_conf)
+@parser(Specs.httpd_conf)
 class HttpdConf(LegacyItemAccess, Parser):
     """
     Get the key value pairs separated on the first space, ignoring leading

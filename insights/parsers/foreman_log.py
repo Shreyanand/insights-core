@@ -28,15 +28,10 @@ SatelliteLog - file ``/var/log/foreman-installer/satellite.log``
 """
 
 from .. import LogFileOutput, parser
-from insights.specs import candlepin_error_log
-from insights.specs import candlepin_log
-from insights.specs import foreman_production_log
-from insights.specs import foreman_proxy_log
-from insights.specs import foreman_satellite_log
-from insights.specs import foreman_ssl_access_ssl_log
+from insights.specs import Specs
 
 
-@parser(foreman_proxy_log)
+@parser(Specs.foreman_proxy_log)
 class ProxyLog(LogFileOutput):
     """Class for parsing ``foreman-proxy/proxy.log`` file."""
     time_format = {
@@ -45,25 +40,25 @@ class ProxyLog(LogFileOutput):
     }
 
 
-@parser(foreman_satellite_log)
+@parser(Specs.foreman_satellite_log)
 class SatelliteLog(LogFileOutput):
     """Class for parsing ``foreman-installer/satellite.log`` file."""
     pass
 
 
-@parser(foreman_production_log)
+@parser(Specs.foreman_production_log)
 class ProductionLog(LogFileOutput):
     """Class for parsing ``foreman/production.log`` file."""
     pass
 
 
-@parser(candlepin_log)
+@parser(Specs.candlepin_log)
 class CandlepinLog(LogFileOutput):
     """Class for parsing ``candlepin/candlepin.log`` file."""
     pass
 
 
-@parser(candlepin_error_log)
+@parser(Specs.candlepin_error_log)
 class CandlepinErrorLog(LogFileOutput):
     """
     Class for parsing ``candlepin/error.log`` file.
@@ -92,7 +87,7 @@ class CandlepinErrorLog(LogFileOutput):
     pass
 
 
-@parser(foreman_ssl_access_ssl_log)
+@parser(Specs.foreman_ssl_access_ssl_log)
 class ForemanSSLAccessLog(LogFileOutput):
     """Class for parsing ``var/log/httpd/foreman-ssl_access_ssl.log`` file.
 
