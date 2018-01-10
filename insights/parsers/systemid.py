@@ -80,7 +80,7 @@ class SystemID(XMLParser):
     </params>
     '''
 
-    def _parse_dom(self):
+    def parse_dom(self):
         systemid_info = {}
         for member in self.dom.findall(".//member"):
             # ignore "fields" infos
