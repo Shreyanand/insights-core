@@ -156,7 +156,7 @@ class SystemctlShowPulpResourceManager(SystemctlShow):
             ExecMainStartTimestamp=Thu 2018-01-11 14:22:33 CST
             ExecMainStartTimestampMonotonic=105028117
             ExecMainExitTimestampMonotonic=0
-            ExecMainPID=2810
+            ExecMainPID=28101
             ExecMainCode=0
             ExecMainStatus=0
             ExecStart={ path=/usr/bin/celery ; argv[]=/usr/bin/celery worker -A pulp.server.async.app -n resource_manager@

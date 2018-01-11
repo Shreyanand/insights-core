@@ -396,10 +396,10 @@ static_specs = {
     "sysctl.conf"               : SimpleFileSpec("etc/sysctl.conf"),
     "sysctl.conf_initramfs"     : CommandSpec("/bin/lsinitrd /boot/initramfs-{uname_r}kdump.img -f /etc/sysctl.conf /etc/sysctl.d/*.conf", uname_r=r"\S+"),
     "systemctl_cinder-volume"   : CommandSpec("/bin/systemctl show openstack-cinder-volume"),
-    "systemctl_list-unit-files" : CommandSpec("/bin/systemctl list-unit-files"),
+    "systemctl_list-unit-files" : CommandSpec("/bin/systemctl list-unit-files"), 
     "systemctl_list-units"      : CommandSpec("/bin/systemctl list-units"),
     "systemctl_mariadb"         : CommandSpec("/bin/systemctl show mariadb"),
-    "systemctl_pulp_workers"         : CommandSpec("/bin/systemctl show pulp_workers"),
+    "systemctl_pulp_workers"         : CommandSpec("/bin/systemctl show pulp_workers"), #RHEL7
     "systemctl_pulp_resource_manager"         : CommandSpec("/bin/systemctl show pulp_resource_manager"),
     "systemctl_pulp_celerybeat"         : CommandSpec("/bin/systemctl show pulp_celerybeat"),
     "systemd_docker"            : SimpleFileSpec("usr/lib/systemd/system/docker.service"),
