@@ -1,9 +1,9 @@
-from .. import Parser, parser, LegacyItemAccess
+from .. import XMLParser, parser
 from insights.specs import Specs
 
 
 @parser(Specs.systemid)
-class SystemID(LegacyItemAccess, Parser):
+class SystemID(XMLParser):
     '''
     ---------------
     Return a SystemId object which contains a dict below:
