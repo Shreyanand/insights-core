@@ -1,5 +1,6 @@
 from insights import add_filter
 from insights.parsers.httpd_conf import HttpdConf
+from insights.specs import Specs
 from insights.tests import context_wrap
 
 HTTPD_CONF_1 = """
@@ -139,7 +140,7 @@ def test_get_httpd_conf_nest_2():
     }
 
 
-add_filter('httpd.conf', [
+add_filter(Specs.httpd_conf, [
     'SSLProtocol', 'NSSProtocol', 'RequestHeader', 'FcgidPassHeader'
     '<IfModule worker.c>', '<IfModule prefork.c>', '</IfModule>', 'MaxClients', 'UserDir',
 ])

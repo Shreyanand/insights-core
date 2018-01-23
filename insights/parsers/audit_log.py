@@ -14,7 +14,7 @@ from insights.specs import Specs
 filter_list = [
     'type=AVC',
 ]
-add_filter('audut.log', filter_list)
+add_filter(Specs.audit_log, filter_list)
 
 
 @parser(Specs.audit_log)
