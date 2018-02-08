@@ -970,6 +970,315 @@ resourceVersion: ""
 selfLink: ""
 """.strip()
 
+OC_GET_NODE = """
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Node
+  metadata:
+    annotations:
+      volumes.kubernetes.io/controller-managed-attach-detach: "true"
+    creationTimestamp: 2018-01-09T02:04:15Z
+    labels:
+      beta.kubernetes.io/arch: amd64
+      beta.kubernetes.io/os: linux
+      kubernetes.io/hostname: master37
+      openshift-infra: apiserver
+    name: master37
+    namespace: ""
+    resourceVersion: "4414367"
+    selfLink: /api/v1/nodes/master37
+    uid: 64ce06a1-f4e1-11e7-aa53-001a4a0102af
+  spec:
+    externalID: master37
+    unschedulable: true
+  status:
+    addresses:
+    - address: 10.66.208.248
+      type: InternalIP
+    - address: master37
+      type: Hostname
+    allocatable:
+      cpu: "8"
+      memory: 20587320Ki
+      pods: "80"
+    capacity:
+      cpu: "8"
+      memory: 20689720Ki
+      pods: "80"
+    conditions:
+    - lastHeartbeatTime: 2018-02-02T09:46:46Z
+      lastTransitionTime: 2018-01-09T02:04:15Z
+      message: kubelet has sufficient disk space available
+      reason: KubeletHasSufficientDisk
+      status: "False"
+      type: OutOfDisk
+    - lastHeartbeatTime: 2018-02-02T09:46:46Z
+      lastTransitionTime: 2018-01-09T02:04:15Z
+      message: kubelet has sufficient memory available
+      reason: KubeletHasSufficientMemory
+      status: "False"
+      type: MemoryPressure
+    - lastHeartbeatTime: 2018-02-02T09:46:46Z
+      lastTransitionTime: 2018-01-09T02:04:15Z
+      message: kubelet has no disk pressure
+      reason: KubeletHasNoDiskPressure
+      status: "False"
+      type: DiskPressure
+    daemonEndpoints:
+      kubeletEndpoint:
+        Port: 10250
+    images:
+    - names:
+      - registry.access.redhat.com/openshift3/ose@sha256:c4fe334182030e0878a462998aef2ae48536eb8966c570ddb2710a11b8e9ac82
+      - registry.access.redhat.com/openshift3/ose:v3.7
+      sizeBytes: 1059063314
+    - names:
+      - registry.access.redhat.com/openshift3/ose-service-catalog@sha256:e06e609d21f1df6ff396a4d95caade01149e3ee706490b9665708fd95ba84ad0
+      - registry.access.redhat.com/openshift3/ose-service-catalog:v3.7
+      sizeBytes: 268789707
+    - names:
+      - registry.access.redhat.com/openshift3/ose-pod@sha256:5b397b3fd1bb98e53e829b8938f853364d3ff85d85f2e011fae3f67757e9cf96
+      - registry.access.redhat.com/openshift3/ose-pod:v3.7.14
+      sizeBytes: 208847376
+    nodeInfo:
+      architecture: amd64
+      bootID: e998fc70-8d7d-47ac-81c6-72a662c68424
+      containerRuntimeVersion: docker://1.12.6
+      kernelVersion: 3.10.0-693.11.6.el7.x86_64
+      kubeProxyVersion: v1.7.6+a08f5eeb62
+      kubeletVersion: v1.7.6+a08f5eeb62
+      machineID: 897d22c8a60d434b9b5857ffa80064e4
+      operatingSystem: linux
+      osImage: Employee SKU
+      systemUUID: 897D22C8-A60D-434B-9B58-57FFA80064E4
+""".strip()
+
+OC_GET_RC = """
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: ReplicationController
+  metadata:
+    annotations:
+      openshift.io/deployer-pod.name: jenkins-1-deploy
+      openshift.io/deployment-config.latest-version: "1"
+      openshift.io/deployment-config.name: jenkins
+      openshift.io/deployment.phase: Complete
+      openshift.io/deployment.replicas: "1"
+      openshift.io/deployment.status-reason: image change
+    creationTimestamp: 2017-11-28T08:24:39Z
+    generation: 2
+    labels:
+      app: jenkins-ephemeral
+      openshift.io/deployment-config.name: jenkins
+      template: jenkins-ephemeral-template
+    name: jenkins-1
+    namespace: ci
+    resourceVersion: "9998736"
+    selfLink: /api/v1/namespaces/ci/replicationcontrollers/jenkins-1
+    uid: 93a12b07-d415-11e7-aef1-001a4a010222
+  spec:
+    replicas: 1
+    selector:
+      deployment: jenkins-1
+      deploymentconfig: jenkins
+      name: jenkins
+    template:
+      metadata:
+        annotations:
+          openshift.io/deployment-config.latest-version: "1"
+          openshift.io/deployment-config.name: jenkins
+          openshift.io/deployment.name: jenkins-1
+          openshift.io/generated-by: OpenShiftNewApp
+        creationTimestamp: null
+        labels:
+          app: jenkins-ephemeral
+          deployment: jenkins-1
+          deploymentconfig: jenkins
+          name: jenkins
+      spec:
+        containers:
+        - env:
+          - name: JENKINS_PASSWORD
+            value: welcome1
+          - name: KUBERNETES_MASTER
+            value: https://kubernetes.default:443
+          - name: KUBERNETES_TRUST_CERTIFICATES
+            value: "true"
+          - name: JNLP_SERVICE_NAME
+            value: jenkins-jnlp
+          name: jenkins
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /login
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 3
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 3
+          resources:
+            limits:
+              memory: 512Mi
+          securityContext:
+            capabilities: {}
+            privileged: false
+          terminationMessagePath: /dev/termination-log
+          volumeMounts:
+          - mountPath: /var/lib/jenkins
+            name: jenkins-data
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        securityContext: {}
+        serviceAccount: jenkins
+        serviceAccountName: jenkins
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - emptyDir: {}
+          name: jenkins-data
+  status:
+    availableReplicas: 1
+    fullyLabeledReplicas: 1
+    observedGeneration: 2
+    readyReplicas: 1
+    replicas: 1
+""".strip()
+
+OC_GET_EVENT = """
+apiVersion: v1
+items:
+- apiVersion: v1
+  count: 5613
+  firstTimestamp: 2018-01-12T02:38:19Z
+  involvedObject:
+    apiVersion: v1
+    fieldPath: spec.containers{busybox}
+    kind: Pod
+    name: busybox
+    namespace: ci
+    resourceVersion: "10897114"
+    uid: 69f22749-f1da-11e7-989a-001a4a010222
+  kind: Event
+  lastTimestamp: 2018-02-02T09:49:42Z
+  message: pulling image "busybox"
+  metadata:
+    creationTimestamp: 2018-01-12T02:38:19Z
+    name: busybox.1508ef957b1935a4
+    namespace: ci
+    resourceVersion: "12356614"
+    selfLink: /api/v1/namespaces/ci/events/busybox.1508ef957b1935a4
+    uid: a648ed7c-f741-11e7-989a-001a4a010222
+  reason: Pulling
+  source:
+    component: kubelet
+    host: node2
+  type: Normal
+- apiVersion: v1
+  count: 1
+  firstTimestamp: 2018-02-05T01:55:35Z
+  involvedObject:
+    apiVersion: v1
+    kind: Pod
+    name: ruby-ex-2-htczn
+    namespace: test-ruby
+    resourceVersion: "4892941"
+    uid: a82ecd0f-0a17-11e8-97fa-001a4a0102af
+  kind: Event
+  lastTimestamp: 2018-02-05T01:55:35Z
+  message: Successfully assigned ruby-ex-2-htczn to node237
+  metadata:
+    creationTimestamp: 2018-02-05T01:55:35Z
+    name: ruby-ex-2-htczn.15104b2e14a7ffc7
+    namespace: test-ruby
+    resourceVersion: "4892946"
+    selfLink: /api/v1/namespaces/test-ruby/events/ruby-ex-2-htczn.15104b2e14a7ffc7
+    uid: a831518d-0a17-11e8-97fa-001a4a0102af
+  reason: Scheduled
+  source:
+    component: default-scheduler
+  type: Normal
+- apiVersion: v1
+  count: 1
+  firstTimestamp: 2018-02-05T01:55:35Z
+  involvedObject:
+    apiVersion: v1
+    kind: ReplicationController
+    name: ruby-ex-2
+    namespace: test-ruby
+    resourceVersion: "4892939"
+    uid: a57f2d52-0a17-11e8-97fa-001a4a0102af
+  kind: Event
+  lastTimestamp: 2018-02-05T01:55:35Z
+  message: 'Created pod: ruby-ex-2-htczn'
+  metadata:
+    creationTimestamp: 2018-02-05T01:55:35Z
+    name: ruby-ex-2.15104b2e13fcd0ca
+    namespace: test-ruby
+    resourceVersion: "4892945"
+    selfLink: /api/v1/namespaces/test-ruby/events/ruby-ex-2.15104b2e13fcd0ca
+    uid: a82fc0ed-0a17-11e8-97fa-001a4a0102af
+  reason: SuccessfulCreate
+  source:
+    component: replication-controller
+  type: Normal
+- apiVersion: v1
+  count: 1
+  firstTimestamp: 2018-02-05T01:55:31Z
+  involvedObject:
+    apiVersion: apps.openshift.io
+    kind: DeploymentConfig
+    name: ruby-ex
+    namespace: test-ruby
+    resourceVersion: "4892911"
+    uid: dafbf582-04a4-11e8-97fa-001a4a0102af
+  kind: Event
+  lastTimestamp: 2018-02-05T01:55:31Z
+  message: Created new replication controller "ruby-ex-2" for version 2
+  metadata:
+    creationTimestamp: 2018-02-05T01:55:31Z
+    name: ruby-ex.15104b2d079675f7
+    namespace: test-ruby
+    resourceVersion: "4892913"
+    selfLink: /api/v1/namespaces/test-ruby/events/ruby-ex.15104b2d079675f7
+    uid: a580c543-0a17-11e8-97fa-001a4a0102af
+  reason: DeploymentCreated
+  source:
+    component: deploymentconfig-controller
+  type: Normal
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""
+""".strip()
+
+OC_GET_EGRESS_NETWORK_POLICY = """
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: EgressNetworkPolicy
+  metadata:
+    creationTimestamp: 2018-01-29T03:31:59Z
+    name: policy-test
+    namespace: test-ruby
+    resourceVersion: "3649310"
+    selfLink: /oapi/v1/namespaces/test-ruby/egressnetworkpolicies/policy-test
+    uid: f6b065cc-04a4-11e8-97fa-001a4a0102af
+  spec:
+    egress:
+    - to:
+        dnsName: www.baidu.com
+      type: Allow
+    - to:
+        cidrSelector: 0.0.0.0/0
+      type: Deny
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""
+""".strip()
+
 
 def test_oc_get_pod_yml():
     result = openshift_get.OcGetPod(context_wrap(OC_GET_POD))
@@ -978,6 +1287,7 @@ def test_oc_get_pod_yml():
     assert result.data['items'][0]['spec']['host'] == 'node2.ose.com'
     assert result.get("items")[0]['spec']['host'] == 'node2.ose.com'
     assert result.get_pod()["router-1-1-w27o2"]["metadata"]["labels"]["deploymentconfig"] == "router-1"
+    assert result.pods["router-1-1-w27o2"]["metadata"]["labels"]["deploymentconfig"] == "router-1"
 
 
 def test_oc_get_service_yml():
@@ -992,6 +1302,7 @@ def test_oc_get_service_yml():
     assert result.get("items")[0]['spec']['clusterIP'] == '172.30.0.1'
     assert "zjj-project" in result.data['items'][1]['metadata']['namespace']
     assert result.get_service()["router-1"]["metadata"]["resourceVersion"] == "1638401"
+    assert result.services["router-1"]["metadata"]["resourceVersion"] == "1638401"
 
 
 def test_oc_get_bc_yml():
@@ -1000,6 +1311,8 @@ def test_oc_get_bc_yml():
     assert result['items'][1]['metadata']['name'] == 'mybank'
     assert result.get_bc()['mybank']['status']['lastVersion'] == 11
     assert result.get_bc()['tom']['metadata']['namespace'] == 'ci'
+    assert result.build_configs['mybank']['status']['lastVersion'] == 11
+    assert result.build_configs['tom']['metadata']['namespace'] == 'ci'
 
 
 def test_oc_get_dc_yml():
@@ -1008,6 +1321,7 @@ def test_oc_get_dc_yml():
     assert result.data['items'][0]['metadata']['generation'] == 3
     assert result.get("items")[0]['metadata']['generation'] == 3
     assert result.get_dc()["router-1"]["metadata"]["namespace"] == "zjj-project"
+    assert result.deployment_configs["router-1"]["metadata"]["namespace"] == "zjj-project"
 
 
 def test_oc_get_rolebinding_yml():
@@ -1016,6 +1330,7 @@ def test_oc_get_rolebinding_yml():
     assert result.data['items'][0]['metadata']['resourceVersion'] == "11803596"
     assert result.get("items")[0]['metadata']['resourceVersion'] == "11803596"
     assert result.get_rolebind()["myrole"]["roleRef"]["namespace"] == "foo"
+    assert result.rolebindings["myrole"]["roleRef"]["namespace"] == "foo"
 
 
 def test_oc_get_project_yml():
@@ -1023,7 +1338,7 @@ def test_oc_get_project_yml():
     assert result.data['items'][0]['kind'] == 'Project'
     assert result.data['items'][0]['metadata']['resourceVersion'] == "11040756"
     assert result.get('items')[0]['metadata']['resourceVersion'] == "11040756"
-    assert result.get_project()["test"]["status"]["phase"] == "Active"
+    assert result.projects["test"]["status"]["phase"] == "Active"
 
 
 def test_oc_get_role_yml():
@@ -1032,6 +1347,7 @@ def test_oc_get_role_yml():
     assert result.data['items'][0]['metadata']['resourceVersion'] == "94"
     assert result.get('items')[0]['metadata']['resourceVersion'] == "94"
     assert result.get_role()["shared-resource-viewer"]["metadata"]["uid"] == "a10c3f88-6ecc-11e6-83c6-001a4a0101f0"
+    assert result.roles["shared-resource-viewer"]["metadata"]["uid"] == "a10c3f88-6ecc-11e6-83c6-001a4a0101f0"
 
 
 def test_oc_get_pv_yml():
@@ -1040,6 +1356,7 @@ def test_oc_get_pv_yml():
     assert result.data['items'][0]['metadata']['name'] == 'registry-volume'
     assert result.get('items')[0]['metadata']['name'] == 'registry-volume'
     assert result.get_pv()['registry-volume-zjj']['spec']['capacity']['storage'] == '10Gi'
+    assert result.persistent_volumes['registry-volume-zjj']['spec']['capacity']['storage'] == '10Gi'
 
 
 def test_oc_get_pvc_yml():
@@ -1048,6 +1365,7 @@ def test_oc_get_pvc_yml():
     assert result.data['items'][0]['metadata']['name'] == 'registry-claim'
     assert result.get('items')[0]['metadata']['name'] == 'registry-claim'
     assert result.get_pvc()['registry-claim-test1']['spec']['volumeName'] == 'registry-volume-zjj'
+    assert result.persistent_volume_claims['registry-claim-test1']['spec']['volumeName'] == 'registry-volume-zjj'
 
 
 def test_oc_get_endpoints_yml():
@@ -1056,3 +1374,36 @@ def test_oc_get_endpoints_yml():
     assert result.data['items'][0]['metadata']['name'] == 'gluster-cluster'
     assert result.get('items')[0]['metadata']['name'] == 'gluster-cluster'
     assert result.get_endpoints()['kubernetes']['subsets'][0]["addresses"][0]["ip"] == '10.66.219.113'
+    assert result.endpoints['kubernetes']['subsets'][0]["addresses"][0]["ip"] == '10.66.219.113'
+
+
+def test_oc_get_node():
+    result = openshift_get.OcGetNode(context_wrap(OC_GET_NODE))
+    assert result.data['items'][0]['kind'] == 'Node'
+    assert result.data['items'][0]['metadata']['name'] == 'master37'
+    assert result.get('items')[0]['metadata']['uid'] == '64ce06a1-f4e1-11e7-aa53-001a4a0102af'
+    assert result.nodes['master37']['spec']['unschedulable'] is True
+
+
+def test_oc_get_rc():
+    result = openshift_get.OcGetRc(context_wrap(OC_GET_RC))
+    assert result.data['items'][0]['kind'] == 'ReplicationController'
+    assert result.data['items'][0]['metadata']['selfLink'] == '/api/v1/namespaces/ci/replicationcontrollers/jenkins-1'
+    assert result.get('items')[0]['spec']['replicas'] == 1
+    assert result.replication_controllers['jenkins-1']['spec']['selector']['deployment'] == 'jenkins-1'
+
+
+def test_oc_get_event():
+    result = openshift_get.OcGetEvent(context_wrap(OC_GET_EVENT))
+    assert result.data['items'][0]['kind'] == 'Event'
+    assert result.data['items'][2]['involvedObject']['kind'] == 'ReplicationController'
+    assert result.get('items')[1]['message'] == 'Successfully assigned ruby-ex-2-htczn to node237'
+    assert result.events['busybox.1508ef957b1935a4']['type'] == 'Normal'
+
+
+def test_oc_get_egressnetworkpolicy_yml():
+    result = openshift_get.OcGetEgressNetworkPolicy(context_wrap(OC_GET_EGRESS_NETWORK_POLICY))
+    assert result.data['items'][0]['kind'] == 'EgressNetworkPolicy'
+    assert result.data['items'][0]['metadata']['creationTimestamp'] == datetime.datetime(2018, 1, 29, 3, 31, 59)
+    assert result.get('items')[0]['metadata']['name'] == 'policy-test'
+    assert result.egress_network_policies['policy-test']['spec']['egress'][0]['to']['dnsName'] == 'www.baidu.com'
