@@ -33,9 +33,10 @@ Examples:
 """
 
 from .. import parser, SysconfigOptions
+from insights.specs import Specs
 
 
-@parser('etc/default/pulp_workers')
+@parser(Specs.pulp_worker_defaults)
 class PulpWorkerDefaults(SysconfigOptions):
     """
     Parse the ``/etc/default/pulp_workers`` file.
