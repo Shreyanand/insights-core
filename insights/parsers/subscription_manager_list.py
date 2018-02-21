@@ -10,7 +10,7 @@ SubscriptionManagerListConsumed - command ``subscription-manager list --consumed
 ----------------------------------------------------------------------------------
 
 SubscriptionManagerListInstalled - command ``subscription-manager list --installed``
-----------------------------------------------------------------------------------
+------------------------------------------------------------------------------------
 
 """
 
@@ -91,6 +91,12 @@ class SubscriptionManagerList(Parser):
         :func:`insights.parsers.keyword_search` function for more details
         on usage.
 
+        Arguments:
+            **kwargs: Key-value pairs of search parameters.
+
+        Returns:
+            (list): A list of records that matched the search criteria.
+
         >>> consumed = shared[SubscriptionManagerListConsumed]
         >>> len(consumed.search(Service_Level='PREMIUM'))
         1
@@ -159,8 +165,8 @@ class SubscriptionManagerListConsumed(SubscriptionManagerList):
     @property
     def all_current(self):
         """
-        Does every subscription record have the Status Details value set to
-        'Subscription is current'?
+        (bool) Does every subscription record have the Status Details value
+        set to 'Subscription is current'?
         """
         return all(
             sub['Status Details'] == 'Subscription is current'
@@ -216,7 +222,7 @@ class SubscriptionManagerListInstalled(SubscriptionManagerList):
     @property
     def all_subscribed(self):
         """
-        Does every product record have the Status value set to
+        (bool) Does every product record have the Status value set to
         'Subscribed'?
         """
         return all(
