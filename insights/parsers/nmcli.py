@@ -1,10 +1,18 @@
 """
-NmcliDevShow - command ``nmcli dev show``
-======================================
+Nmcli parsers
+=============
 
-This file will parse the command line tools used to manage NetworkManager.
+This file will parse the output of command line tools used to manage
+NetworkManager.
+
+Parsers provided by this module include:
+
+NmcliDevShow - command ``/usr/bin/nmcli dev show``
+--------------------------------------------------
 
 """
+
+
 import re
 from .. import Parser, parser, LegacyItemAccess, get_active_lines
 
@@ -12,13 +20,17 @@ from .. import Parser, parser, LegacyItemAccess, get_active_lines
 @parser('nmcli_dev_show')
 class NmcliDevShow(Parser, LegacyItemAccess):
     """
-    This class will parse the content of ``nm dev show`` command output, the information
-    will be stored as per devices in dictonary format.
+    This class will parse the output of command ``nmcli dev show``, and the information
+    will be stored in dictionary format.
 
     NetworkManager displays all the devices and there current states along with network
     configuration and connection status.
-
-    sample input for ```/usr/bin/nmcli dev show`::
+    
+    Attributes:
+        data (dict): Dictionary of keys with values in dict.
+        get_connected_devices(list): list of devices who's state is connected.
+    
+    Sample input for ``/usr/bin/nmcli dev show``::
 
         GENERAL.DEVICE:                         em3
         GENERAL.TYPE:                           ethernet
@@ -58,8 +70,10 @@ class NmcliDevShow(Parser, LegacyItemAccess):
         WIRED-PROPERTIES.CARRIER:               off
 
     Sample Output::
+
         {
-            'em3': {
+            'em3':
+                {
                   'IP4_DNS3': '10.5.30.160',
                   'IP4_DNS2': '10.11.5.19',
                   'IP4_DNS1': '10.16.36.29',
@@ -78,7 +92,8 @@ class NmcliDevShow(Parser, LegacyItemAccess):
                   'IP6_GATEWAY': 'fe80:52:0:10bb::fc',
                   'TYPE': 'ethernet'
                 },
-              'em2': {
+              'em2': 
+                {
                   'STATE': 'connected',
                   'CARRIER': 'off',
                   'HWADDR': 'B8:2A:72:DE:F8:BC',
@@ -89,6 +104,16 @@ class NmcliDevShow(Parser, LegacyItemAccess):
             ...
             ...
         }
+
+    Examples:
+        >>> nmcli_obj = shared[NmcliDevShow]
+        >>> nmcli_obj.data['em3']['STATE']
+        connected
+        >>> nmcli_obj.data['em2']['HWADDR']
+        B8:2A:72:DE:F8:BC
+        >>> nmcli_obj.get_connected_devices
+        ['em3', 'em2']
+
     """
 
     def parse_content(self, content):
@@ -121,7 +146,7 @@ class NmcliDevShow(Parser, LegacyItemAccess):
 
     @property
     def get_connected_devices(self):
-        """(list): The list of devices connected and mannaged by NetworkManager"""
+        """(list): The list of devices who's state is connected and managed by NetworkManager"""
         con_dev = []
         for key in self.data:
             if 'STATE' in self.data[key] and self.data[key]['STATE'] == 'connected':

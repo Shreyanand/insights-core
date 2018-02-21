@@ -1,5 +1,5 @@
 from insights.tests import context_wrap
-from insights.parsers.nmcli_show import NmcliDevShow
+from insights.parsers.nmcli import NmcliDevShow
 
 NMCLI_SHOW = """
 GENERAL.DEVICE:                         em3
@@ -52,7 +52,7 @@ Error: Option '-l' is unknown, try 'nmcli -help'.
 """
 
 
-def test_nmcli_show():
+def test_nmcli():
     nmcli_obj = NmcliDevShow(context_wrap(NMCLI_SHOW))
     con_dev = nmcli_obj.get_connected_devices
     assert con_dev == ['em1', 'em3', 'em2']
