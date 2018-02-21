@@ -23,7 +23,7 @@ class NmcliDevShow(Parser, LegacyItemAccess):
     This class will parse the output of command ``nmcli dev show``, and the information
     will be stored in dictionary format.
 
-    NetworkManager displays all the devices and there current states along with network
+    NetworkManager displays all the devices and their current states along with network
     configuration and connection status.
     
     Attributes:
