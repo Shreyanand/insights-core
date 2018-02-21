@@ -25,11 +25,11 @@ class NmcliDevShow(Parser, LegacyItemAccess):
 
     NetworkManager displays all the devices and their current states along with network
     configuration and connection status.
-    
+
     Attributes:
         data (dict): Dictionary of keys with values in dict.
         get_connected_devices(list): list of devices who's state is connected.
-    
+
     Sample input for ``/usr/bin/nmcli dev show``::
 
         GENERAL.DEVICE:                         em3
@@ -92,7 +92,7 @@ class NmcliDevShow(Parser, LegacyItemAccess):
                   'IP6_GATEWAY': 'fe80:52:0:10bb::fc',
                   'TYPE': 'ethernet'
                 },
-              'em2': 
+              'em2':
                 {
                   'STATE': 'connected',
                   'CARRIER': 'off',
