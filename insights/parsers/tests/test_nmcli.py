@@ -54,7 +54,7 @@ Error: Option '-l' is unknown, try 'nmcli -help'.
 
 def test_nmcli():
     nmcli_obj = NmcliDevShow(context_wrap(NMCLI_SHOW))
-    con_dev = nmcli_obj.get_connected_devices
+    con_dev = nmcli_obj.connected_devices
     assert con_dev == ['em1', 'em3', 'em2']
     assert nmcli_obj.data['em3']['IP4_GATEWAY'] == "10.16.187.254"
     assert nmcli_obj.data['em3']['IP4_DNS1'] == "10.16.36.29"
@@ -68,9 +68,9 @@ def test_nmcli():
     assert len(nmcli_obj.data['em1']) == 7
 
     nmcli_obj = NmcliDevShow(context_wrap(NMCLI_SHOW_NOT))
-    con_dev = nmcli_obj.get_connected_devices
-    assert con_dev is None
+    con_dev = nmcli_obj.connected_devices
+    assert con_dev == []
 
     nmcli_obj = NmcliDevShow(context_wrap(NMCLI_SHOW_NO))
-    con_dev = nmcli_obj.get_connected_devices
-    assert con_dev is None
+    con_dev = nmcli_obj.connected_devices
+    assert con_dev == []
