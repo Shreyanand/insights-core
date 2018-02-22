@@ -145,10 +145,10 @@ class NmcliDevShow(Parser, LegacyItemAccess):
             self.data[current_dev] = per_device
 
     @property
-    def get_connected_devices(self):
+    def connected_devices(self):
         """(list): The list of devices who's state is connected and managed by NetworkManager"""
         con_dev = []
         for key in self.data:
             if 'STATE' in self.data[key] and self.data[key]['STATE'] == 'connected':
                 con_dev.append(key)
-        return con_dev if con_dev else None
+        return con_dev
