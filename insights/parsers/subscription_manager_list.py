@@ -16,7 +16,7 @@ SubscriptionManagerListInstalled - command ``subscription-manager list --install
 
 from .. import Parser, parser
 from . import keyword_search
-from datetime import date
+from datetime import datetime
 import re
 
 
@@ -34,7 +34,6 @@ class SubscriptionManagerList(Parser):
 
         key_val_re = re.compile('^(?P<key>\w[\w\s]+\w):\s+(?P<value>\w.*)$')
         cont_val_re = re.compile('^\s+(?P<value>\w.*)$')
-        mdy_re = re.compile('(?P<month>0\d|1[012])/(?P<day>[012]\d|3[01])/(?P<year>\d+)')
 
         # The first line that matches the key_val_re is treated as the start
         # of a record.  The header doesn't match because it doesn't have a
@@ -59,13 +58,12 @@ class SubscriptionManagerList(Parser):
                 if key == 'Active' and value in ('True', 'False'):
                     current_record[key] = (value == 'True')
                 elif key in ('Starts', 'Ends'):
-                    date_match = mdy_re.search(value)
-                    if date_match:
-                        current_record[key + ' timestamp'] = date(
-                            year=int(date_match.group('year')) + 2000,
-                            month=int(date_match.group('month')),
-                            day=int(date_match.group('day')),
+                    try:
+                        current_record[key + ' timestamp'] = datetime.strptime(
+                            value, '%m/%d/%y'
                         )
+                    except ValueError:
+                        pass
             elif not record_start_key:
                 # Ignore any lines before the first record key.
                 continue
@@ -156,7 +154,7 @@ class SubscriptionManagerListConsumed(SubscriptionManagerList):
         >>> sub1['Starts']  # Basic field as text - note month/day/year
         '11/14/14'
         >>> type(sub1['Starts timestamp'])  # Converted to date
-        <type 'datetime.date'>
+        <type 'datetime.datetime'>
         >>> sub1['Starts timestamp'].year
         2014
         >>> consumed.all_current  # Are all subscriptions listed as current?
